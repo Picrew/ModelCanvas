@@ -1,6 +1,7 @@
 import { cp, mkdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { build } from "esbuild";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -14,10 +15,39 @@ async function copyIfChanged(source, destination) {
 }
 
 await Promise.all([
-  copyIfChanged(join(root, "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"), join(root, "public/pdf.worker.min.mjs")),
-  copyIfChanged(join(root, "node_modules/katex/dist/katex.min.css"), join(root, "public/katex/katex.min.css")),
-  cp(join(root, "node_modules/katex/dist/fonts"), join(root, "public/katex/fonts"), { recursive: true, force: true }),
-  ...["pyodide.asm.js", "pyodide.asm.wasm", "pyodide.mjs", "python_stdlib.zip", "pyodide-lock.json"].map((file) =>
-    copyIfChanged(join(root, "node_modules/pyodide", file), join(root, "public/pyodide", file)),
+  build({
+    entryPoints: [join(root, "src/runtime/react-artifact-runtime.ts")],
+    outfile: join(root, "public/react-artifact-runtime.js"),
+    bundle: true,
+    format: "iife",
+    platform: "browser",
+    target: ["es2022"],
+    minify: true,
+    legalComments: "none",
+  }),
+  copyIfChanged(
+    join(root, "node_modules/pdfjs-dist/build/pdf.worker.min.mjs"),
+    join(root, "public/pdf.worker.min.mjs"),
+  ),
+  copyIfChanged(
+    join(root, "node_modules/katex/dist/katex.min.css"),
+    join(root, "public/katex/katex.min.css"),
+  ),
+  cp(
+    join(root, "node_modules/katex/dist/fonts"),
+    join(root, "public/katex/fonts"),
+    { recursive: true, force: true },
+  ),
+  ...[
+    "pyodide.asm.js",
+    "pyodide.asm.wasm",
+    "pyodide.mjs",
+    "python_stdlib.zip",
+    "pyodide-lock.json",
+  ].map((file) =>
+    copyIfChanged(
+      join(root, "node_modules/pyodide", file),
+      join(root, "public/pyodide", file),
+    ),
   ),
 ]);

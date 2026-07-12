@@ -12,38 +12,48 @@
 
 # testing
 /coverage
+playwright-report/
+test-results/
+/.playwright-cli/
 
 # next.js
 /.next/
 /.vinext/
 /out/
+/dist/
+/.wrangler/
 
 # misc
 .DS_Store
 *.pem
+.idea/
+.vscode/
+.eslintcache
+*.tsbuildinfo
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local environment files; keep the documented template
+.env
+.env.local
+.env.*.local
+!.env.example
 
 # vercel
 .vercel
 
 # typescript
 next-env.d.ts
-/dist/
-/.wrangler/
+
+# local build and tool output
 /outputs/
 /work/
 /tmp/
 *.inspect.ndjson
-tsconfig.tsbuildinfo
-playwright-report/
-test-results/
-/.playwright-cli/
 /output/
+/public/react-artifact-runtime.js

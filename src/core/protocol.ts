@@ -65,7 +65,8 @@ export function migrateEnvelope(input: unknown): {
 
   const value = cloneJson(input) as Record<string, unknown>;
   const migrations: MigrationStep[] = [];
-  const originalVersion = typeof value.version === "string" ? value.version : "unversioned";
+  const originalVersion =
+    typeof value.version === "string" ? value.version : "unversioned";
 
   if (typeof value.type === "string" && legacyTypeAliases[value.type]) {
     const previousType = value.type;
@@ -87,7 +88,11 @@ export function migrateEnvelope(input: unknown): {
     });
   }
 
-  if (value.version === "v1" || value.version === "1" || value.version === "0.1.0") {
+  if (
+    value.version === "v1" ||
+    value.version === "1" ||
+    value.version === "0.1.0"
+  ) {
     value.version = RENDER_PROTOCOL_VERSION;
     migrations.push({
       from: originalVersion,
@@ -104,7 +109,9 @@ function issuePath(path: PropertyKey[]): string {
   return path.reduce<string>((result, segment) => {
     if (typeof segment === "number") return `${result}[${segment}]`;
     const key = String(segment);
-    return /^[A-Za-z_$][\w$]*$/.test(key) ? `${result}.${key}` : `${result}[${JSON.stringify(key)}]`;
+    return /^[A-Za-z_$][\w$]*$/.test(key)
+      ? `${result}.${key}`
+      : `${result}[${JSON.stringify(key)}]`;
   }, "$");
 }
 
@@ -142,14 +149,17 @@ export function parseRenderEnvelope(input: unknown): ParseResult {
       success: false,
       migrations: [],
       input,
-      issues: [{ path: limited.path, message: limited.message, code: limited.code }],
+      issues: [
+        { path: limited.path, message: limited.message, code: limited.code },
+      ],
     };
   }
 
   const { value, migrations } = migrateEnvelope(input);
-  const type = value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>).type
-    : undefined;
+  const type =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>).type
+      : undefined;
 
   if (typeof type === "string" && !RenderTypeSchema.safeParse(type).success) {
     const unknown = UnknownEnvelopeSchema.safeParse(value);
@@ -164,7 +174,13 @@ export function parseRenderEnvelope(input: unknown): ParseResult {
     return {
       success: true,
       data: unknown.data as UnknownRenderEnvelope,
-      issues: [{ path: "$.type", message: `No registered protocol schema for ${type}; fallback required`, code: "unknown_type" }],
+      issues: [
+        {
+          path: "$.type",
+          message: `No registered protocol schema for ${type}; fallback required`,
+          code: "unknown_type",
+        },
+      ],
       migrations,
       unknownType: true,
     };
@@ -180,13 +196,21 @@ export function parseRenderEnvelope(input: unknown): ParseResult {
     };
   }
 
-  return { success: true, data: parsed.data, issues: [], migrations, unknownType: false };
+  return {
+    success: true,
+    data: parsed.data,
+    issues: [],
+    migrations,
+    unknownType: false,
+  };
 }
 
 export function serializeRenderEnvelope(envelope: AnyRenderEnvelope): string {
   const parsed = parseRenderEnvelope(envelope);
   if (!parsed.success) {
-    const detail = parsed.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
+    const detail = parsed.issues
+      .map((issue) => `${issue.path}: ${issue.message}`)
+      .join("; ");
     throw new Error(`Cannot serialize invalid RenderEnvelope: ${detail}`);
   }
   return JSON.stringify(parsed.data);
@@ -197,7 +221,13 @@ export function deserializeRenderEnvelope(serialized: string): ParseResult {
     return {
       success: false,
       migrations: [],
-      issues: [{ path: "$", message: "Serialized envelope exceeds 2 MB", code: "payload_too_large" }],
+      issues: [
+        {
+          path: "$",
+          message: "Serialized envelope exceeds 2 MB",
+          code: "payload_too_large",
+        },
+      ],
     };
   }
   try {
@@ -206,12 +236,13 @@ export function deserializeRenderEnvelope(serialized: string): ParseResult {
     return {
       success: false,
       migrations: [],
-      issues: [{
-        path: "$",
-        message: error instanceof Error ? error.message : "Invalid JSON",
-        code: "invalid_json",
-      }],
+      issues: [
+        {
+          path: "$",
+          message: error instanceof Error ? error.message : "Invalid JSON",
+          code: "invalid_json",
+        },
+      ],
     };
   }
 }
-

@@ -129,21 +129,21 @@ flowchart LR
 
 ## 7. Technical choices
 
-| Concern | Choice | Reason / fallback |
-|---|---|---|
-| Runtime | React 19 + vinext/Next-compatible App Router + Cloudflare Worker | Existing supported deployment scaffold; route-local client boundaries |
-| Styling | Tailwind CSS 4 plus semantic CSS variables | Small design-system surface, responsive and themeable |
-| Validation | Zod 4 + JSON Schema export | One source for runtime types, error paths, and protocol schema |
-| Markdown | `react-markdown`, GFM, math, KaTeX, sanitization, custom fenced renderers | Streaming-safe; incomplete blocks degrade to literal code |
-| Code | Shiki-compatible highlighting; Monaco lazy edit mode | Static path remains fast if editor cannot load |
-| Charts | ECharts and Vega-Lite lazy client modules | Coexistence and export; option/spec sanitizers run first |
-| Diagrams | Mermaid strict mode; Excalidraw lazy module | SVG/PNG export and visible parse errors |
-| Table | TanStack Table + windowed rows | Typed controls and large-data protection |
-| Media | native media plus Wavesurfer | Native fallback is always retained |
-| Documents | PDF.js, docx preview, SheetJS, epub.js; LibreOffice conversion service | Service failure exposes download/fallback, never fake preview |
-| Artifacts | sandbox iframe, Sandpack, Pyodide Worker | Stop/reset controls and isolated errors |
-| Spatial | MapLibre GL and Three.js | No injected style scripts; explicit disposal |
-| Tests | Vitest, Testing Library, axe, Playwright | Unit through E2E and stable visual fixtures |
+| Concern    | Choice                                                                    | Reason / fallback                                                     |
+| ---------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Runtime    | React 19 + vinext/Next-compatible App Router + Cloudflare Worker          | Existing supported deployment scaffold; route-local client boundaries |
+| Styling    | Tailwind CSS 4 plus semantic CSS variables                                | Small design-system surface, responsive and themeable                 |
+| Validation | Zod 4 + JSON Schema export                                                | One source for runtime types, error paths, and protocol schema        |
+| Markdown   | `react-markdown`, GFM, math, KaTeX, sanitization, custom fenced renderers | Streaming-safe; incomplete blocks degrade to literal code             |
+| Code       | Shiki-compatible highlighting; Monaco lazy edit mode                      | Static path remains fast if editor cannot load                        |
+| Charts     | ECharts and Vega-Lite lazy client modules                                 | Coexistence and export; option/spec sanitizers run first              |
+| Diagrams   | Mermaid strict mode; Excalidraw lazy module                               | SVG/PNG export and visible parse errors                               |
+| Table      | TanStack Table + windowed rows                                            | Typed controls and large-data protection                              |
+| Media      | native media plus Wavesurfer                                              | Native fallback is always retained                                    |
+| Documents  | PDF.js, docx preview, SheetJS, epub.js; LibreOffice conversion service    | Service failure exposes download/fallback, never fake preview         |
+| Artifacts  | sandbox iframe, local Babel/React runtime, Pyodide Worker                 | Stop/reset controls and isolated errors                               |
+| Spatial    | MapLibre GL and Three.js                                                  | No injected style scripts; explicit disposal                          |
+| Tests      | Vitest, Testing Library, axe, Playwright                                  | Unit through E2E and stable visual fixtures                           |
 
 Dependencies are pinned through the existing lockfile after checking current official maintenance, license, browser-only loading requirements, and SSR behavior. Reference code is not copied.
 
@@ -170,17 +170,17 @@ Dependencies are pinned through the existing lockfile after checking current off
 
 ## 10. Risks and degradation strategy
 
-| Risk | Mitigation / honest degradation |
-|---|---|
-| Heavy renderer packages exceed bundle or Worker limits | Lazy import; explicit size guard; basic/native renderer remains available |
-| Office fidelity differs by browser | Use browser preview for basic content and the isolated LibreOffice-to-PDF service for fidelity |
-| Browser lacks a codec, WebGL, speech, or Worker feature | Detect capability, explain it, offer transcript/raw/download; never show false success |
-| Remote tiles/assets violate network-default policy | Offline/simple basemap fixture or user-enabled allow-listed origin with attribution |
-| Pyodide startup is slow or unsupported | Progress, cancellable Worker, explicit unsupported error, code/output fixture remains labeled |
-| Sandbox cannot enforce byte/CPU quota perfectly in browser | Payload limits, watchdog termination, Worker/iframe replacement, no host privileges |
-| Real provider credentials are absent | Deterministic fixture provider and Browser SpeechSynthesis fallback, clearly labeled |
-| Conversion service is unavailable | Explain service state, show source metadata/download, preserve retry; never pretend conversion happened |
-| Third-party API/spec evolves | Narrow adapters, version tags, fixture tests, unknown-event fallback |
+| Risk                                                       | Mitigation / honest degradation                                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Heavy renderer packages exceed bundle or Worker limits     | Lazy import; explicit size guard; basic/native renderer remains available                               |
+| Office fidelity differs by browser                         | Use browser preview for basic content and the isolated LibreOffice-to-PDF service for fidelity          |
+| Browser lacks a codec, WebGL, speech, or Worker feature    | Detect capability, explain it, offer transcript/raw/download; never show false success                  |
+| Remote tiles/assets violate network-default policy         | Offline/simple basemap fixture or user-enabled allow-listed origin with attribution                     |
+| Pyodide startup is slow or unsupported                     | Progress, cancellable Worker, explicit unsupported error, code/output fixture remains labeled           |
+| Sandbox cannot enforce byte/CPU quota perfectly in browser | Payload limits, watchdog termination, Worker/iframe replacement, no host privileges                     |
+| Real provider credentials are absent                       | Deterministic fixture provider and Browser SpeechSynthesis fallback, clearly labeled                    |
+| Conversion service is unavailable                          | Explain service state, show source metadata/download, preserve retry; never pretend conversion happened |
+| Third-party API/spec evolves                               | Narrow adapters, version tags, fixture tests, unknown-event fallback                                    |
 
 ## 11. Implementation order
 
@@ -261,4 +261,3 @@ Dependencies are pinned through the existing lockfile after checking current off
 - [ ] CI frozen install/lint/format/typecheck/unit/build/E2E/cache/failure artifacts
 - [ ] Three observed validation rounds recorded with versions, counts, fixes, limits, and failures
 - [ ] No hard-coded secrets, fake success, disabled core tests, empty renderer, or undisclosed severe error
-

@@ -12,7 +12,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["src/core/**/*.ts", "src/security/**/*.ts", "src/adapters/**/*.ts"],
+      include: [
+        "src/core/**/*.ts",
+        "src/security/**/*.ts",
+        "src/adapters/**/*.ts",
+      ],
       thresholds: { lines: 75, functions: 70, branches: 65, statements: 75 },
     },
   },

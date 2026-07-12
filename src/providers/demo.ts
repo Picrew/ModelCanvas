@@ -17,4 +17,3 @@ export class DemoProvider implements ModelProvider {
     return events();
   }
 }
-

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUp,
+  BarChart3,
+  Blocks,
   Braces,
   Check,
   ChevronDown,
@@ -11,9 +13,12 @@ import {
   Copy,
   Download,
   FileJson,
+  FileText,
   FileUp,
   GalleryHorizontalEnd,
   History,
+  Image,
+  Layers3,
   Maximize2,
   Menu,
   MessageSquareText,
@@ -25,18 +30,20 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  Volume2,
   X,
 } from "lucide-react";
 import {
   deserializeRenderEnvelope,
+  ipynbEnvelope,
   parseRenderEnvelope,
   type ParseResult,
   type RendererEvent,
 } from "@/src/core";
 import {
+  allDemoScenarios,
   defaultScenario,
-  demoScenarios,
-  findScenario,
+  findAnyScenario,
   type DemoScenario,
 } from "@/src/fixtures";
 import type {
@@ -198,8 +205,9 @@ export function Playground() {
   const [provider, setProvider] = useState<ProviderId>("demo");
   const [history, setHistory] = useState<SessionItem[]>([]);
   const [inspection, setInspection] = useState<RendererInspection>();
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [pasteValue, setPasteValue] = useState("");
   const [pasteError, setPasteError] = useState<string>();
   const [providerError, setProviderError] = useState<string>();
@@ -208,7 +216,9 @@ export function Playground() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [eventNotice, setEventNotice] = useState<string>();
+  const [caseMode, setCaseMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const conversationRef = useRef<HTMLElement>(null);
   const artifactRef = useRef<HTMLElement>(null);
   const objectUrls = useRef<string[]>([]);
   const envelope = scenario.envelope as AnyRenderEnvelope;
@@ -217,12 +227,12 @@ export function Playground() {
     [envelope],
   );
   const categories = useMemo(
-    () => [...new Set(demoScenarios.map((item) => item.category))],
+    () => [...new Set(allDemoScenarios.map((item) => item.category))],
     [],
   );
   const visibleScenarios = useMemo(
     () =>
-      demoScenarios.filter(
+      allDemoScenarios.filter(
         (item) =>
           !search ||
           `${item.title} ${item.description}`
@@ -242,7 +252,10 @@ export function Playground() {
     const selectedId = new URLSearchParams(window.location.search).get(
       "scenario",
     );
-    const selected = demoScenarios.find((item) => item.id === selectedId);
+    setCaseMode(
+      new URLSearchParams(window.location.search).get("case") === "1",
+    );
+    const selected = allDemoScenarios.find((item) => item.id === selectedId);
     if (selected) setScenario(selected);
     return () => objectUrls.current.forEach(URL.revokeObjectURL);
   }, []);
@@ -259,6 +272,12 @@ export function Playground() {
     setProviderError(undefined);
     setSidebarOpen(false);
     window.history.replaceState(null, "", `?scenario=${next.id}`);
+    window.requestAnimationFrame(() =>
+      artifactRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
   };
   const handleInspection = useCallback(
     (value: RendererInspection) => setInspection(value),
@@ -269,7 +288,7 @@ export function Playground() {
     if (!value) return;
     setProviderError(undefined);
     if (provider === "demo") {
-      const next = findScenario(value);
+      const next = findAnyScenario(value);
       chooseScenario(next);
       setHistory((current) =>
         [
@@ -373,15 +392,13 @@ export function Playground() {
         if (!(input as Record<string, unknown>)?.type) {
           if (extension.toLowerCase() === "geojson")
             input = {
-              id: `geo-${Date.now()}`,
+              id: `geo-${file.lastModified}-${file.size}`,
               type: "map.geo",
               version: "1.0.0",
               payload: { geojson: input },
             };
           else if (extension.toLowerCase() === "ipynb")
-            setProviderError(
-              "Raw notebook upload requires conversion to the ModelCanvas notebook payload; use the built-in fixture for now.",
-            );
+            input = ipynbEnvelope(input, file.name);
         }
       } catch {
         setProviderError("The uploaded JSON is malformed");
@@ -460,7 +477,7 @@ export function Playground() {
   };
 
   return (
-    <main className="playground-shell">
+    <main className={`playground-shell ${caseMode ? "case-mode" : ""}`}>
       <header className="topbar">
         <div className="brand">
           <button
@@ -473,9 +490,7 @@ export function Playground() {
           </button>
           <Link href="/" className="brand-link">
             <span className="logo-mark">
-              <i />
-              <i />
-              <i />
+              <Blocks />
             </span>
             <span>
               <strong>ModelCanvas</strong>
@@ -538,7 +553,7 @@ export function Playground() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search 26 demos"
+              placeholder={`Search ${allDemoScenarios.length} demos`}
             />
           </label>
           <div className="scenario-groups">
@@ -564,19 +579,19 @@ export function Playground() {
                       onClick={() => chooseScenario(item)}
                     >
                       <span className="scenario-icon">
-                        {item.id === "weather"
-                          ? "☀"
-                          : item.id === "stock"
-                            ? "⌁"
-                            : item.category === "Charts"
-                              ? "⌗"
-                              : item.category === "Media"
-                                ? "◉"
-                                : item.category === "Artifacts"
-                                  ? "⌘"
-                                  : item.category === "Documents"
-                                    ? "▤"
-                                    : "◇"}
+                        {item.category === "Charts" ? (
+                          <BarChart3 />
+                        ) : item.category === "Media" ? (
+                          <Volume2 />
+                        ) : item.category === "Artifacts" ? (
+                          <Layers3 />
+                        ) : item.category === "Documents" ? (
+                          <FileText />
+                        ) : item.id === "compare" ? (
+                          <Image />
+                        ) : (
+                          <Blocks />
+                        )}
                       </span>
                       <span>
                         <strong>{item.title}</strong>
@@ -609,7 +624,7 @@ export function Playground() {
             </section>
           ) : null}
         </aside>
-        <section className="conversation-panel">
+        <section className="conversation-panel" ref={conversationRef}>
           <div className="conversation-heading">
             <div>
               <p className="eyebrow">Conversation</p>
@@ -633,16 +648,15 @@ export function Playground() {
                 <Sparkles />
               </span>
               <div>
+                <h2>What would you like to render?</h2>
                 <p>
-                  I can route natural language, files, or a raw{" "}
-                  <code>RenderEnvelope</code> to the right renderer. Everything
-                  shown here works in labeled fixture mode.
+                  Ask naturally, upload a file, or open one of the examples.
                 </p>
                 <div className="suggestion-row">
                   {[
                     "北京未来七天天气",
-                    "Pronounce ephemeral",
-                    "Create a Mermaid flow",
+                    "“你好”怎么读并下载音频",
+                    "Create a project timeline",
                   ].map((suggestion) => (
                     <button
                       type="button"
@@ -701,17 +715,19 @@ export function Playground() {
                   void runPrompt();
                 }
               }}
-              placeholder="Ask for a chart, document, pronunciation, or widget…"
+              placeholder="Message ModelCanvas"
               aria-label="Prompt"
             />
             <div className="composer-row">
-              <div>
+              <div className="composer-tools">
                 <button
-                  className="icon-button"
+                  className="composer-add"
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Add content"
+                  aria-expanded={toolsOpen}
+                  onClick={() => setToolsOpen((value) => !value)}
                 >
-                  <FileUp /> Upload
+                  <Plus />
                 </button>
                 <input
                   ref={fileInputRef}
@@ -723,13 +739,29 @@ export function Playground() {
                     event.currentTarget.value = "";
                   }}
                 />
-                <button
-                  className="icon-button"
-                  type="button"
-                  onClick={() => setPasteOpen(true)}
-                >
-                  <FileJson /> Paste envelope
-                </button>
+                {toolsOpen ? (
+                  <div className="composer-menu">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setToolsOpen(false);
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      <FileUp /> Upload a file
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Paste envelope"
+                      onClick={() => {
+                        setToolsOpen(false);
+                        setPasteOpen(true);
+                      }}
+                    >
+                      <FileJson /> Paste an envelope
+                    </button>
+                  </div>
+                ) : null}
               </div>
               <div>
                 <label className="provider-select">
@@ -752,6 +784,7 @@ export function Playground() {
                   className="send-button"
                   type="button"
                   aria-label="Send prompt"
+                  disabled={!prompt.trim()}
                   onClick={() => void runPrompt()}
                 >
                   <ArrowUp />
@@ -766,6 +799,15 @@ export function Playground() {
           ) : null}
         </section>
         <section className="artifact-panel" ref={artifactRef}>
+          {caseMode ? (
+            <div className="case-prompt">
+              <p>{scenario.prompt}</p>
+              <div>
+                <h1>{scenario.title}</h1>
+                <span>{scenario.description}</span>
+              </div>
+            </div>
+          ) : null}
           <header className="artifact-heading">
             <div>
               <p className="eyebrow">Artifact</p>
@@ -821,11 +863,22 @@ export function Playground() {
           </header>
           <div className="artifact-meta">
             <span>
-              <ShieldCheck /> Schema valid
+              <ShieldCheck /> Validated
             </span>
             <span>
-              <span className="fixture-dot" /> Example data
+              <span className="fixture-dot" /> Fixture data
             </span>
+            <button
+              type="button"
+              onClick={() =>
+                conversationRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              <MessageSquareText /> Ask another
+            </button>
             <button
               type="button"
               onClick={() => setInspectorOpen((value) => !value)}

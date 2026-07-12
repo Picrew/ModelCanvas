@@ -6,4 +6,7 @@ class ResizeObserverStub implements ResizeObserver {
   disconnect() {}
 }
 
-Object.defineProperty(globalThis, "ResizeObserver", { value: ResizeObserverStub, writable: true });
+Object.defineProperty(globalThis, "ResizeObserver", {
+  value: ResizeObserverStub,
+  writable: true,
+});

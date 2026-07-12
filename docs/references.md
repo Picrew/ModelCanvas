@@ -14,7 +14,7 @@ Official repositories were reviewed as architectural references; no source code 
 
 - [Apache ECharts](https://github.com/apache/echarts) and [Vega-Lite](https://github.com/vega/vega-lite): interactive and declarative charts. ModelCanvas adds a data-only sanitation boundary.
 - [Mermaid](https://github.com/mermaid-js/mermaid), [Excalidraw](https://github.com/excalidraw/excalidraw), and [React Flow](https://github.com/xyflow/xyflow): diagram syntax, editable canvas, and node-flow interaction.
-- [Sandpack](https://github.com/codesandbox/sandpack), [LiveCodes](https://github.com/live-codes/livecodes), and [Pyodide](https://github.com/pyodide/pyodide): isolated code preview and browser Python. ModelCanvas chooses Sandpack plus a terminable Worker.
+- [Sandpack](https://github.com/codesandbox/sandpack), [LiveCodes](https://github.com/live-codes/livecodes), and [Pyodide](https://github.com/pyodide/pyodide): isolated code preview and browser Python patterns. ModelCanvas uses a self-hosted Babel/React iframe runtime plus a terminable Pyodide Worker so the core artifact demos do not depend on a remote bundler.
 - [PDF.js](https://github.com/mozilla/pdf.js), [Univer](https://github.com/dream-num/univer), and LibreOffice headless: document preview and conversion. The current spreadsheet path is lightweight XLSX/table rendering; Univer remains a future editing option.
 - [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js), [deck.gl](https://github.com/visgl/deck.gl), and [three.js](https://github.com/mrdoob/three.js): spatial data and 3D rendering. The default map fixture is offline and token-free.
 - [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js), [Peaks.js](https://github.com/bbc/peaks.js): waveform, regions, and timestamped audio navigation. ModelCanvas uses wavesurfer with native audio fallback.
@@ -24,3 +24,5 @@ Official repositories were reviewed as architectural references; no source code 
 [Chainlit](https://github.com/Chainlit/chainlit), [LibreChat](https://github.com/danny-avila/LibreChat), [Open WebUI](https://github.com/open-webui/open-webui), [Cherry Studio](https://github.com/CherryHQ/cherry-studio), and [CopilotKit generative-ui](https://github.com/CopilotKit/generative-ui) were surveyed for chat/artifact layout, provider extensibility, and tool-result presentation. ModelCanvas deliberately stays a rendering bridge rather than becoming a full chat backend.
 
 Dependency versions and transitive licenses should be regenerated for each release with an SBOM/license scanner; this document records design influence, not a substitute for legal review.
+
+Country flag assets under `public/flags/` are sourced from [Twemoji](https://github.com/twitter/twemoji), licensed under CC-BY 4.0.

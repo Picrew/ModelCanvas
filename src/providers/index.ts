@@ -9,4 +9,3 @@ export function redactProviderError(message: string): string {
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]")
     .slice(0, 1_000);
 }
-

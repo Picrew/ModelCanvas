@@ -95,27 +95,44 @@ function PdfView({
   }, [url]);
   useEffect(() => {
     let cancelled = false;
+    let renderTask: import("pdfjs-dist").RenderTask | undefined;
     const document = documentRef.current;
     if (!document || !canvasRef.current || page > document.numPages) return;
-    void document.getPage(page).then(async (pdfPage) => {
-      if (cancelled || !canvasRef.current) return;
-      const viewport = pdfPage.getViewport({ scale });
-      const context = canvasRef.current.getContext("2d");
-      if (!context) return;
-      const ratio = window.devicePixelRatio || 1;
-      canvasRef.current.width = viewport.width * ratio;
-      canvasRef.current.height = viewport.height * ratio;
-      canvasRef.current.style.width = `${viewport.width}px`;
-      canvasRef.current.style.height = `${viewport.height}px`;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      await pdfPage.render({
-        canvas: canvasRef.current,
-        canvasContext: context,
-        viewport,
-      }).promise;
-    });
+    const renderPage = async () => {
+      try {
+        const pdfPage = await document.getPage(page);
+        if (cancelled || !canvasRef.current) return;
+        const viewport = pdfPage.getViewport({ scale });
+        const context = canvasRef.current.getContext("2d");
+        if (!context) return;
+        const ratio = window.devicePixelRatio || 1;
+        canvasRef.current.width = viewport.width * ratio;
+        canvasRef.current.height = viewport.height * ratio;
+        canvasRef.current.style.width = `${viewport.width}px`;
+        canvasRef.current.style.height = `${viewport.height}px`;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        renderTask = pdfPage.render({
+          canvas: canvasRef.current,
+          canvasContext: context,
+          viewport,
+        });
+        await renderTask.promise;
+      } catch (cause) {
+        const name =
+          typeof cause === "object" && cause && "name" in cause
+            ? String(cause.name)
+            : "";
+        if (!cancelled && name !== "RenderingCancelledException") {
+          setError(
+            cause instanceof Error ? cause.message : "PDF failed to render",
+          );
+        }
+      }
+    };
+    void renderPage();
     return () => {
       cancelled = true;
+      renderTask?.cancel();
     };
   }, [page, pages, scale]);
   const search = async () => {
@@ -383,7 +400,8 @@ function SpreadsheetView({
             };
             if (cell.result !== undefined) return toPrimitive(cell.result);
             if (cell.text !== undefined) return cell.text;
-            if (cell.richText) return cell.richText.map((part) => part.text).join("");
+            if (cell.richText)
+              return cell.richText.map((part) => part.text).join("");
           }
           return String(value);
         };
@@ -434,7 +452,9 @@ function SpreadsheetView({
         row
           .map((cell) => {
             const value = String(cell ?? "");
-            return /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+            return /[",\r\n]/.test(value)
+              ? `"${value.replaceAll('"', '""')}"`
+              : value;
           })
           .join(","),
       )
@@ -473,11 +493,7 @@ function SpreadsheetView({
             placeholder="Find cells"
           />
         </label>
-        <button
-          className="icon-button"
-          type="button"
-          onClick={exportCsv}
-        >
+        <button className="icon-button" type="button" onClick={exportCsv}>
           <Download /> CSV
         </button>
         <button
@@ -711,7 +727,7 @@ function EpubView({ envelope }: { envelope: EpubEnvelope }) {
     [fontSize],
   );
   return (
-    <section className="epub-renderer">
+    <section className="epub-renderer" data-testid="epub-renderer">
       <div className="renderer-toolbar">
         <button
           className="icon-button compact"

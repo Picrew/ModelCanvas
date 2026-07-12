@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 export const JsonPrimitiveSchema = z.union([
   z.string(),
@@ -48,4 +49,3 @@ export const TranscriptCueSchema = z
   });
 
 export const StringMapSchema = z.record(z.string(), z.string());
-

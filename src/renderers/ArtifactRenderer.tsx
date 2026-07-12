@@ -31,6 +31,10 @@ function downloadText(content: string, name: string, type = "text/plain") {
   URL.revokeObjectURL(url);
 }
 
+function escapeInlineScript(content: string) {
+  return content.replace(/<\/script/gi, "<\\/script");
+}
+
 function ArtifactTabs({
   tab,
   setTab,
@@ -213,53 +217,103 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
   );
 }
 
-const allowedReactDependencies = new Set([
-  "@heroicons/react",
-  "lucide-react",
-  "date-fns",
-  "recharts",
-]);
+const allowedReactDependencies = new Set(["react"]);
 
 function ReactArtifact({ envelope }: { envelope: ReactEnvelope }) {
   const [tab, setTab] = useState<"preview" | "code">("preview");
   const [key, setKey] = useState(0);
-  const [error, setError] = useState<string>();
-  const [components, setComponents] =
-    useState<typeof import("@codesandbox/sandpack-react")>();
+  const [running, setRunning] = useState(true);
+  const [status, setStatus] = useState("starting");
+  const [logs, setLogs] = useState<string[]>([]);
+  const [files, setFiles] = useState({ ...envelope.payload.files });
+  const [activeFile, setActiveFile] = useState(envelope.payload.entry);
+  const [runtimeSource, setRuntimeSource] = useState<string>();
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const unsafe = Object.keys(envelope.payload.dependencies).filter(
     (name) => !allowedReactDependencies.has(name),
   );
   useEffect(() => {
     let active = true;
-    void import("@codesandbox/sandpack-react")
-      .then((module) => active && setComponents(module))
-      .catch(
-        (cause) =>
-          active &&
-          setError(
-            cause instanceof Error ? cause.message : "Sandpack failed to load",
-          ),
-      );
+    void fetch("/react-artifact-runtime.js")
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(`Runtime request failed (${response.status})`);
+        return response.text();
+      })
+      .then((source) => {
+        if (active) setRuntimeSource(source);
+      })
+      .catch((cause) => {
+        setStatus("error");
+        setLogs([
+          cause instanceof Error ? cause.message : "Runtime failed to load",
+        ]);
+      });
     return () => {
       active = false;
     };
   }, []);
+  const srcDoc = useMemo(
+    () =>
+      `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; font-src data:"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body,#root{min-height:100%;margin:0}body{background:#0d1323;color:#eef2ff}</style></head><body><div id="root"></div><script>${escapeInlineScript(runtimeSource ?? "")}</script></body></html>`,
+    [runtimeSource],
+  );
+  const sendFiles = () =>
+    frameRef.current?.contentWindow?.postMessage(
+      {
+        channel: "modelcanvas-react",
+        type: "run",
+        entry: envelope.payload.entry,
+        files,
+      },
+      "*",
+    );
+  useEffect(() => {
+    const listener = (event: MessageEvent) => {
+      if (
+        event.source !== frameRef.current?.contentWindow ||
+        event.data?.channel !== "modelcanvas-react"
+      )
+        return;
+      if (event.data.type === "runtime-ready") sendFiles();
+      if (event.data.type === "ready") setStatus("ready");
+      if (event.data.type === "error") {
+        setStatus("error");
+        setLogs((current) => [
+          ...current.slice(-49),
+          String(event.data.message),
+        ]);
+      }
+    };
+    window.addEventListener("message", listener);
+    return () => window.removeEventListener("message", listener);
+  });
+  useEffect(() => {
+    if (!running) return;
+    setStatus("compiling");
+    const refresh = window.setTimeout(sendFiles, 450);
+    return () => window.clearTimeout(refresh);
+  }, [files, key, running]);
+  useEffect(() => {
+    if (!running || status === "ready" || status === "error") return;
+    const timeout = window.setTimeout(() => {
+      setStatus("error");
+      setLogs((current) => [
+        ...current,
+        `Compilation exceeded ${envelope.payload.timeoutMs} ms`,
+      ]);
+    }, envelope.payload.timeoutMs);
+    return () => window.clearTimeout(timeout);
+  }, [envelope.payload.timeoutMs, key, running, status]);
   if (unsafe.length)
     return (
       <div className="renderer-state" role="alert">
         <TriangleAlert />
         <h2>Dependency policy rejected this artifact</h2>
-        <p>Not allow-listed: {unsafe.join(", ")}</p>
+        <p>Not available in the offline allow-list: {unsafe.join(", ")}</p>
       </div>
     );
-  const files = { ...envelope.payload.files };
-  if (
-    files["/styles.css"] &&
-    files[envelope.payload.entry] &&
-    !files[envelope.payload.entry].includes("styles.css")
-  )
-    files[envelope.payload.entry] =
-      `import './styles.css';\n${files[envelope.payload.entry]}`;
   return (
     <section
       className="artifact-renderer react-artifact"
@@ -268,8 +322,8 @@ function ReactArtifact({ envelope }: { envelope: ReactEnvelope }) {
       <div className="artifact-security">
         <ShieldAlert />
         <span>
-          <strong>React sandbox</strong> · TypeScript compiler · allow-listed
-          dependencies · isolated preview
+          <strong>React sandbox</strong> · local TypeScript compiler · no
+          network · isolated origin
         </span>
       </div>
       <div className="renderer-toolbar">
@@ -277,9 +331,30 @@ function ReactArtifact({ envelope }: { envelope: ReactEnvelope }) {
         <button
           className="icon-button"
           type="button"
-          onClick={() => setKey((value) => value + 1)}
+          onClick={() => setRunning((value) => !value)}
+        >
+          {running ? <Square /> : <Play />} {running ? "Stop" : "Run"}
+        </button>
+        <button
+          className="icon-button"
+          type="button"
+          onClick={() => {
+            setFiles({ ...envelope.payload.files });
+            setActiveFile(envelope.payload.entry);
+            setLogs([]);
+            setStatus("starting");
+            setRunning(true);
+            setKey((value) => value + 1);
+          }}
         >
           <RotateCcw /> Reset
+        </button>
+        <button
+          className="icon-button"
+          type="button"
+          onClick={() => containerRef.current?.requestFullscreen()}
+        >
+          <Maximize2 /> Fullscreen
         </button>
         <button
           className="icon-button"
@@ -296,56 +371,65 @@ function ReactArtifact({ envelope }: { envelope: ReactEnvelope }) {
           <Download /> Export
         </button>
       </div>
-      {error ? (
-        <div className="inline-error" role="alert">
-          {error}
-        </div>
-      ) : components ? (
-        (() => {
-          const {
-            SandpackProvider,
-            SandpackLayout,
-            SandpackCodeEditor,
-            SandpackPreview,
-            SandpackConsole,
-          } = components;
-          return (
-            <SandpackProvider
-              key={key}
-              template="react-ts"
-              files={files}
-              customSetup={{
-                entry: envelope.payload.entry,
-                dependencies: envelope.payload.dependencies,
-              }}
-              options={{
-                activeFile: envelope.payload.entry,
-                visibleFiles: Object.keys(files),
-                recompileMode: "delayed",
-                recompileDelay: 500,
-              }}
-            >
-              <SandpackLayout>
-                {tab === "code" ? (
-                  <SandpackCodeEditor
-                    showLineNumbers
-                    wrapContent
-                    closableTabs
-                  />
-                ) : (
-                  <SandpackPreview
-                    showOpenInCodeSandbox={false}
-                    showRefreshButton
-                  />
-                )}{" "}
-              </SandpackLayout>
-              <SandpackConsole standalone showHeader />
-            </SandpackProvider>
-          );
-        })()
-      ) : (
-        <div className="inline-loader">Loading React sandbox…</div>
-      )}
+      <div className="local-react-stage" ref={containerRef}>
+        {tab === "code" ? (
+          <div className="local-react-editor">
+            <div className="filter-row">
+              {Object.keys(files).map((name) => (
+                <button
+                  type="button"
+                  className={name === activeFile ? "active" : ""}
+                  key={name}
+                  onClick={() => setActiveFile(name)}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+            <textarea
+              aria-label="React artifact code"
+              value={files[activeFile] ?? ""}
+              onChange={(event) =>
+                setFiles((current) => ({
+                  ...current,
+                  [activeFile]: event.target.value,
+                }))
+              }
+              spellCheck={false}
+            />
+          </div>
+        ) : running && runtimeSource ? (
+          <iframe
+            key={key}
+            ref={frameRef}
+            title="React artifact preview"
+            sandbox="allow-scripts"
+            referrerPolicy="no-referrer"
+            srcDoc={srcDoc}
+            onLoad={sendFiles}
+          />
+        ) : running ? (
+          <div className="inline-loader">Loading local React runtime…</div>
+        ) : (
+          <div className="artifact-stopped">
+            <Square />
+            <h2>Runtime stopped</h2>
+          </div>
+        )}
+      </div>
+      <div className="console-panel">
+        <header>
+          <Terminal /> React runtime <span>{status}</span>
+          <button type="button" onClick={() => setLogs([])}>
+            <Eraser /> Clear
+          </button>
+        </header>
+        {logs.length ? (
+          logs.map((log, index) => <pre key={`${index}-${log}`}>{log}</pre>)
+        ) : (
+          <p>No compiler errors</p>
+        )}
+      </div>
     </section>
   );
 }

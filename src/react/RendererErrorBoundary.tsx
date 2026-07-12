@@ -33,13 +33,23 @@ export class RendererErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <section className="renderer-state" role="alert" data-testid="renderer-error">
-        <div className="state-icon danger"><AlertOctagon aria-hidden="true" /></div>
+      <section
+        className="renderer-state"
+        role="alert"
+        data-testid="renderer-error"
+      >
+        <div className="state-icon danger">
+          <AlertOctagon aria-hidden="true" />
+        </div>
         <div>
           <p className="eyebrow">Renderer isolated</p>
           <h2>This renderer stopped safely</h2>
           <p>{this.state.error.message}</p>
-          <button type="button" className="button secondary" onClick={() => this.setState({ error: undefined })}>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => this.setState({ error: undefined })}
+          >
             <RotateCcw aria-hidden="true" /> Try again
           </button>
         </div>
@@ -47,4 +57,3 @@ export class RendererErrorBoundary extends Component<Props, State> {
     );
   }
 }
-

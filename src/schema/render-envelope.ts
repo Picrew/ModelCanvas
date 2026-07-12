@@ -530,7 +530,9 @@ const StockPayloadSchema = z
     change: z.number(),
     changePercent: z.number(),
     marketStatus: z.enum(["open", "closed", "pre", "after"]),
-    range: z.enum(["1D", "1W", "1M", "3M", "1Y"]).default("1M"),
+    range: z
+      .enum(["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "MAX"])
+      .default("1M"),
     series: z.array(PricePointSchema).min(1).max(10_000),
     metrics: z.record(z.string(), JsonPrimitiveSchema).default({}),
     updatedAt: z.string(),
@@ -548,10 +550,13 @@ const SportsPayloadSchema = z
             id: z.string(),
             home: z.string(),
             away: z.string(),
+            homeCode: z.string().max(8).optional(),
+            awayCode: z.string().max(8).optional(),
             homeScore: z.number().int().optional(),
             awayScore: z.number().int().optional(),
             status: z.string(),
             startsAt: z.string(),
+            stage: z.enum(["R32", "R16", "QF", "SF", "F"]).optional(),
           })
           .strict(),
       )

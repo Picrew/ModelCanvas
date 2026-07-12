@@ -35,6 +35,7 @@ test("validates pasted envelopes and exposes inspector details", async ({
 }) => {
   await page.goto("/");
   await expect(page.getByTestId("weather-widget")).toBeVisible();
+  await page.getByRole("button", { name: "Add content" }).click();
   await page.getByRole("button", { name: "Paste envelope" }).click();
   await page
     .getByRole("dialog")
@@ -51,12 +52,14 @@ test("validates pasted envelopes and exposes inspector details", async ({
   await expect(
     page.getByRole("heading", { name: "E2E envelope" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Show inspector" }).click();
   await page
     .getByTestId("protocol-inspector")
     .getByRole("button", { name: "Validation" })
     .click();
   await expect(page.getByText("No validation issues")).toBeVisible();
 
+  await page.getByRole("button", { name: "Add content" }).click();
   await page.getByRole("button", { name: "Paste envelope" }).click();
   await page
     .getByRole("dialog")
@@ -70,7 +73,9 @@ test("validates pasted envelopes and exposes inspector details", async ({
       }),
     );
   await page.getByRole("button", { name: /Validate & render/ }).click();
-  await expect(page.getByText("Add Excalidraw elements to begin")).toBeVisible();
+  await expect(
+    page.getByText("Add Excalidraw elements to begin"),
+  ).toBeVisible();
 });
 
 test("runs dynamic form validation and local confirmation", async ({
@@ -91,10 +96,10 @@ test("runs dynamic form validation and local confirmation", async ({
 test("opens gallery and inspector routes", async ({ page }) => {
   await page.goto("/gallery");
   await expect(
-    page.getByRole("heading", { name: /Every renderer has a contract/i }),
+    page.getByRole("heading", { name: /Renderer registry/i }),
   ).toBeVisible();
   await page.goto("/inspector");
   await expect(
-    page.getByRole("heading", { name: /Trust the trace, not the payload/i }),
+    page.getByRole("heading", { name: /Inspect a RenderEnvelope/i }),
   ).toBeVisible();
 });

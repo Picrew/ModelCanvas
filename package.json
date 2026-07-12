@@ -25,7 +25,6 @@
     "validate": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
-    "@codesandbox/sandpack-react": "^2.20.0",
     "@excalidraw/excalidraw": "^0.18.1",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.14.5",
@@ -63,6 +62,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@babel/standalone": "^7.28.5",
     "@cloudflare/vite-plugin": "^1.44.0",
     "@cloudflare/workers-types": "^5.20260711.1",
     "@playwright/test": "^1.61.1",
@@ -77,6 +77,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitejs/plugin-rsc": "^0.5.27",
     "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.1",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.10",
     "jsdom": "^29.1.1",

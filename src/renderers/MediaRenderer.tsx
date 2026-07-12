@@ -462,7 +462,29 @@ function PronunciationView({
   const [speaking, setSpeaking] = useState<string>();
   const [error, setError] = useState<string>();
   const [generation, setGeneration] = useState(0);
+  const [generating, setGenerating] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const speak = (text: string, label: string) => {
+    if (label === "word" && envelope.payload.audioUrl) {
+      audioRef.current?.pause();
+      const audio = new Audio(envelope.payload.audioUrl);
+      audioRef.current = audio;
+      audio.playbackRate = speed;
+      audio.onplay = () => setSpeaking(label);
+      audio.onended = () => setSpeaking(undefined);
+      audio.onerror = () =>
+        setError("The local pronunciation fixture could not be played");
+      void audio.play().catch((cause) => {
+        if (cause instanceof DOMException && cause.name === "NotAllowedError") {
+          setSpeaking(undefined);
+          return;
+        }
+        setError(
+          cause instanceof Error ? cause.message : "Audio playback failed",
+        );
+      });
+      return;
+    }
     if (!("speechSynthesis" in window)) {
       setError("Browser SpeechSynthesis is unavailable");
       return;
@@ -479,7 +501,46 @@ function PronunciationView({
     };
     speechSynthesis.speak(utterance);
   };
-  useEffect(() => () => speechSynthesis.cancel(), []);
+  const generateMp3 = async () => {
+    setGenerating(true);
+    setError(undefined);
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          text: envelope.payload.word,
+          voice: accent === "us" ? "alloy" : "coral",
+          speed,
+          format: "mp3",
+        }),
+      });
+      if (!response.ok) {
+        const body = (await response.json()) as { error?: string };
+        throw new Error(body.error ?? "MP3 generation failed");
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${envelope.payload.word}.mp3`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setGeneration((value) => value + 1);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "MP3 generation failed",
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
+  useEffect(
+    () => () => {
+      speechSynthesis.cancel();
+      audioRef.current?.pause();
+    },
+    [],
+  );
   return (
     <section
       className="pronunciation-renderer"
@@ -487,8 +548,7 @@ function PronunciationView({
     >
       <div className="pronunciation-hero">
         <div>
-          <p className="eyebrow">{envelope.payload.language} pronunciation</p>
-          <h1>{envelope.payload.word}</h1>
+          <p className="pronunciation-answer">{envelope.payload.definition}</p>
           <div className="syllables">
             {envelope.payload.syllables.map((syllable, index) => (
               <span
@@ -503,25 +563,30 @@ function PronunciationView({
           </div>
         </div>
         <button
-          className={`pronounce-main ${speaking === "word" ? "speaking" : ""}`}
+          className={`pronounce-word ${speaking === "word" ? "speaking" : ""}`}
           type="button"
           aria-label={`Pronounce ${envelope.payload.word}`}
           onClick={() => speak(envelope.payload.word, "word")}
         >
-          <Mic2 />
+          <Volume2 /> <strong>{envelope.payload.word}</strong>
         </button>
       </div>
       <div className="ipa-grid">
         <div>
-          <span>American</span>
+          <span>
+            {envelope.payload.language.includes("Mandarin")
+              ? "Pinyin"
+              : "American"}
+          </span>
           <strong>{envelope.payload.ipaUS}</strong>
         </div>
         <div>
-          <span>British</span>
+          <span>
+            {envelope.payload.language.includes("Mandarin") ? "IPA" : "British"}
+          </span>
           <strong>{envelope.payload.ipaUK}</strong>
         </div>
       </div>
-      <p className="definition">{envelope.payload.definition}</p>
       <div className="example">
         <p>“{envelope.payload.example}”</p>
         <button
@@ -534,13 +599,21 @@ function PronunciationView({
       </div>
       <div className="pronunciation-settings">
         <label>
-          Accent
+          {envelope.payload.language.includes("Mandarin") ? "Voice" : "Accent"}
           <select
             value={accent}
             onChange={(event) => setAccent(event.target.value as "us" | "uk")}
           >
-            <option value="us">American</option>
-            <option value="uk">British</option>
+            <option value="us">
+              {envelope.payload.language.includes("Mandarin")
+                ? "Standard Mandarin"
+                : "American"}
+            </option>
+            <option value="uk">
+              {envelope.payload.language.includes("Mandarin")
+                ? "Alternative voice"
+                : "British"}
+            </option>
           </select>
         </label>
         <label>
@@ -565,6 +638,24 @@ function PronunciationView({
           }}
         >
           <RotateCcw /> Regenerate #{generation + 1}
+        </button>
+      </div>
+      <div className="pronunciation-downloads">
+        {envelope.payload.audioUrl ? (
+          <a
+            href={envelope.payload.audioUrl}
+            download={`${envelope.payload.word}.wav`}
+          >
+            <Download /> Download demo WAV
+          </a>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void generateMp3()}
+          disabled={generating}
+        >
+          <Download />{" "}
+          {generating ? "Generating MP3…" : "Generate provider MP3"}
         </button>
       </div>
       {error ? (

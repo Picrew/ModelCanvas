@@ -75,7 +75,7 @@ export default function ExcalidrawRenderer({
     );
   };
   return (
-    <section className="excalidraw-renderer">
+    <section className="excalidraw-renderer" data-testid="excalidraw-renderer">
       <div className="renderer-toolbar">
         <span className="toolbar-note">
           {elements.length} elements ·{" "}

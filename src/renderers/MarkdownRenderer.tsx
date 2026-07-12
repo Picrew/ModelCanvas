@@ -1,6 +1,13 @@
 "use client";
 
-import { Children, isValidElement, useEffect, useId, useState, type ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  useEffect,
+  useId,
+  useState,
+  type ReactNode,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -13,7 +20,13 @@ import { validateUrl } from "@/src/security";
 
 type MarkdownEnvelope = Extract<KnownRenderEnvelope, { type: "text.markdown" }>;
 
-function CopyButton({ value, label = "Copy" }: { value: string; label?: string }) {
+function CopyButton({
+  value,
+  label = "Copy",
+}: {
+  value: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -43,39 +56,66 @@ function MermaidFence({ code }: { code: string }) {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "strict",
-        theme: document.documentElement.dataset.theme === "dark" ? "dark" : "neutral",
+        theme:
+          document.documentElement.dataset.theme === "dark"
+            ? "dark"
+            : "neutral",
         flowchart: { htmlLabels: false },
       });
       try {
         const rendered = await mermaid.render(`markdown-mermaid-${id}`, code);
         if (active) setSvg(rendered.svg);
       } catch (cause) {
-        if (active) setError(cause instanceof Error ? cause.message : "Invalid Mermaid syntax");
+        if (active)
+          setError(
+            cause instanceof Error ? cause.message : "Invalid Mermaid syntax",
+          );
       }
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [code, id]);
-  if (error) return <div className="inline-error" role="alert">Mermaid: {error}</div>;
-  return svg ? <div className="markdown-mermaid" dangerouslySetInnerHTML={{ __html: svg }} /> : <div className="inline-loader">Rendering diagram…</div>;
+  if (error)
+    return (
+      <div className="inline-error" role="alert">
+        Mermaid: {error}
+      </div>
+    );
+  return svg ? (
+    <div
+      className="markdown-mermaid"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  ) : (
+    <div className="inline-loader">Rendering diagram…</div>
+  );
 }
 
 function CodePre({ children }: { children?: ReactNode }) {
   const child = Children.count(children) === 1 ? Children.only(children) : null;
-  if (!isValidElement<{ className?: string; children?: ReactNode }>(child)) return <pre>{children}</pre>;
+  if (!isValidElement<{ className?: string; children?: ReactNode }>(child))
+    return <pre>{children}</pre>;
   const className = child.props.className ?? "";
   const language = className.replace("language-", "") || "text";
   const code = String(child.props.children ?? "").replace(/\n$/, "");
   if (language === "mermaid") return <MermaidFence code={code} />;
   return (
     <div className="markdown-code">
-      <div className="code-toolbar"><span>{language}</span><CopyButton value={code} /></div>
-      <pre><code className={className}>{code}</code></pre>
+      <div className="code-toolbar">
+        <span>{language}</span>
+        <CopyButton value={code} />
+      </div>
+      <pre>
+        <code className={className}>{code}</code>
+      </pre>
     </div>
   );
 }
 
 export default function MarkdownRenderer({ envelope }: RendererComponentProps) {
-  if (envelope.type !== "text.markdown") throw new Error("Markdown renderer received an incompatible envelope");
+  if (envelope.type !== "text.markdown")
+    throw new Error("Markdown renderer received an incompatible envelope");
   const markdownEnvelope = envelope as MarkdownEnvelope;
   return (
     <article className="markdown-renderer" data-testid="markdown-renderer">
@@ -86,19 +126,39 @@ export default function MarkdownRenderer({ envelope }: RendererComponentProps) {
           pre: CodePre,
           a: ({ href, children }) => {
             const result = validateUrl(href ?? "");
-            if (!result.ok) return <span className="unsafe-link" title={result.reason}>{children}</span>;
-            return <a href={result.url} target="_blank" rel="noreferrer noopener">{children}<ExternalLink aria-hidden="true" /></a>;
+            if (!result.ok)
+              return (
+                <span className="unsafe-link" title={result.reason}>
+                  {children}
+                </span>
+              );
+            return (
+              <a href={result.url} target="_blank" rel="noreferrer noopener">
+                {children}
+                <ExternalLink aria-hidden="true" />
+              </a>
+            );
           },
           img: ({ src, alt }) => {
-            const result = validateUrl(typeof src === "string" ? src : "", { allowData: true, allowBlob: true });
-            return result.ok ? <img src={result.url} alt={alt ?? ""} loading="lazy" /> : <span className="inline-error">Image blocked</span>;
+            const result = validateUrl(typeof src === "string" ? src : "", {
+              allowData: true,
+              allowBlob: true,
+            });
+            return result.ok ? (
+              <img src={result.url} alt={alt ?? ""} loading="lazy" />
+            ) : (
+              <span className="inline-error">Image blocked</span>
+            );
           },
         }}
       >
         {markdownEnvelope.payload.content}
       </ReactMarkdown>
-      {markdownEnvelope.payload.streaming ? <div className="stream-status"><span /> Stream-safe preview · incomplete blocks render as text</div> : null}
+      {markdownEnvelope.payload.streaming ? (
+        <div className="stream-status">
+          <span /> Stream-safe preview · incomplete blocks render as text
+        </div>
+      ) : null}
     </article>
   );
 }
-

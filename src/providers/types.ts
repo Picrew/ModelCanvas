@@ -26,7 +26,14 @@ export interface ModelProvider {
 export class ProviderError extends Error {
   constructor(
     message: string,
-    readonly code: "missing_key" | "unauthorized" | "rate_limited" | "quota" | "network" | "invalid_response" | "unavailable",
+    readonly code:
+      | "missing_key"
+      | "unauthorized"
+      | "rate_limited"
+      | "quota"
+      | "network"
+      | "invalid_response"
+      | "unavailable",
     readonly status = 500,
   ) {
     super(message);
@@ -34,15 +41,23 @@ export class ProviderError extends Error {
   }
 }
 
-export async function collectProviderEnvelope(provider: ModelProvider, request: ModelRequest): Promise<AnyRenderEnvelope> {
+export async function collectProviderEnvelope(
+  provider: ModelProvider,
+  request: ModelRequest,
+): Promise<AnyRenderEnvelope> {
   const stream = await provider.stream(request);
   let envelope: AnyRenderEnvelope | undefined;
   let text = "";
   for await (const event of stream) {
     if (event.type === "envelope") envelope = event.envelope;
     if (event.type === "text-delta") text += event.delta;
-    if (event.type === "error") throw new ProviderError(event.message, "invalid_response", 502);
+    if (event.type === "error")
+      throw new ProviderError(event.message, "invalid_response", 502);
   }
   if (envelope) return envelope;
-  throw new ProviderError(`Provider completed without a RenderEnvelope${text ? ` (${text.slice(0, 120)})` : ""}`, "invalid_response", 502);
+  throw new ProviderError(
+    `Provider completed without a RenderEnvelope${text ? ` (${text.slice(0, 120)})` : ""}`,
+    "invalid_response",
+    502,
+  );
 }

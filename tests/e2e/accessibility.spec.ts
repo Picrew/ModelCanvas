@@ -1,17 +1,21 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("playground has no serious automated accessibility violations", async ({
-  page,
-}) => {
-  await page.goto("/?scenario=weather");
-  await expect(page.getByTestId("weather-widget")).toBeVisible();
-  const results = await new AxeBuilder({ page })
-    .disableRules(["color-contrast"])
-    .analyze();
-  expect(
-    results.violations.filter((violation) =>
+for (const route of [
+  "/",
+  "/gallery",
+  "/inspector",
+  "/?scenario=stock&case=1",
+  "/?scenario=pronunciation&case=1",
+  "/?scenario=sports&case=1",
+  "/?scenario=timeline&case=1",
+]) {
+  test(`${route} has no serious accessibility violations`, async ({ page }) => {
+    await page.goto(route, { waitUntil: "networkidle" });
+    const results = await new AxeBuilder({ page }).analyze();
+    const serious = results.violations.filter((violation) =>
       ["serious", "critical"].includes(violation.impact ?? ""),
-    ),
-  ).toEqual([]);
-});
+    );
+    expect(serious).toEqual([]);
+  });
+}

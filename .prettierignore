@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+.wrangler
+playwright-report
+test-results
+coverage
+public/katex
+public/pyodide
+public/pdf.worker.min.mjs
+public/react-artifact-runtime.js
+fixtures/epub-source
+package-lock.json

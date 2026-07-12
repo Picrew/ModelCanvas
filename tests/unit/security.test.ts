@@ -8,19 +8,32 @@ describe("security boundaries", () => {
   it("blocks executable and insecure URLs", () => {
     expect(validateUrl("javascript:alert(1)").ok).toBe(false);
     expect(validateUrl("http://example.com/a").ok).toBe(false);
-    expect(validateUrl("data:text/html,<script>1</script>", { allowData: true }).ok).toBe(false);
+    expect(
+      validateUrl("data:text/html,<script>1</script>", { allowData: true }).ok,
+    ).toBe(false);
     expect(validateUrl("/fixtures/protocol-brief.pdf").ok).toBe(true);
   });
 
   it("enforces origin allowlists", () => {
-    expect(validateUrl("https://assets.example.com/a.png", { allowedOrigins: ["https://assets.example.com"] }).ok).toBe(true);
-    expect(validateUrl("https://evil.example/a.png", { allowedOrigins: ["https://assets.example.com"] }).ok).toBe(false);
+    expect(
+      validateUrl("https://assets.example.com/a.png", {
+        allowedOrigins: ["https://assets.example.com"],
+      }).ok,
+    ).toBe(true);
+    expect(
+      validateUrl("https://evil.example/a.png", {
+        allowedOrigins: ["https://assets.example.com"],
+      }).ok,
+    ).toBe(false);
   });
 
   it("detects deep and circular JSON", () => {
-    const circular: Record<string, unknown> = {}; circular.self = circular;
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
     expect(assertJsonWithinLimits(circular).code).toBe("not_json");
-    expect(assertJsonWithinLimits({ a: { b: { c: 1 } } }, { maxDepth: 1 }).code).toBe("too_deep");
+    expect(
+      assertJsonWithinLimits({ a: { b: { c: 1 } } }, { maxDepth: 1 }).code,
+    ).toBe("too_deep");
   });
 
   it("builds a restrictive artifact CSP", () => {
@@ -31,8 +44,14 @@ describe("security boundaries", () => {
   });
 
   it("removes functions and prototype keys from chart options", () => {
-    const option = sanitizeDataOnlyChartOption({ series: [{ type: "bar", data: [1, 2] }], __proto__: { polluted: true }, formatter: "safe string" });
+    const option = sanitizeDataOnlyChartOption({
+      series: [{ type: "bar", data: [1, 2] }],
+      __proto__: { polluted: true },
+      formatter: "safe string",
+    });
     expect(option.series).toBeDefined();
-    expect(Object.prototype.hasOwnProperty.call(option, "__proto__")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(option, "__proto__")).toBe(
+      false,
+    );
   });
 });

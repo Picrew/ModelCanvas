@@ -20,6 +20,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "public/pdf.worker.min.mjs",
     "public/pyodide/**",
+    "public/react-artifact-runtime.js",
     "tmp/**",
     "next-env.d.ts",
   ]),
