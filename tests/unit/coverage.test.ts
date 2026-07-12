@@ -46,12 +46,21 @@ describe("acceptance coverage", () => {
 
   it("documents every render type with a real case screenshot", () => {
     const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
     for (const type of RenderTypeSchema.options) {
       expect(readme, `README screenshot for ${type}`).toContain(
         `docs/images/cases/${type}.png`,
       );
+      expect(chineseReadme, `Chinese README screenshot for ${type}`).toContain(
+        `docs/images/cases/${type}.png`,
+      );
     }
     expect(readme).not.toContain("Featured rich results");
+    expect(readme).not.toContain("ModelCanvas 是一个");
+    expect(readme).toContain("![ModelCanvas social preview](./public/og.png)");
+    expect(chineseReadme).toContain(
+      "![ModelCanvas social preview](./public/og.png)",
+    );
   });
 
   it("exports a draft 2020-12 JSON schema with every variant", () => {

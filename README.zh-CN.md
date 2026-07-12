@@ -6,14 +6,53 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 
 ![ModelCanvas social preview](./public/og.png)
 
-## 真实运行案例
+## 运行案例图库
 
-下图全部来自 ModelCanvas 本地前端的实际运行结果，不是设计稿。每个案例都有经过 Schema 校验的 fixture，样例数据会明确标注，不会伪装成实时数据。完整 34 类截图见英文 README 的 **All 34 RenderEnvelope types**。
+以下截图全部来自正在运行的 ModelCanvas 前端，不是设计稿。每个案例都有通过 Schema 校验的 fixture，并会明确标注示例数据。运行应用后，在任意场景 URL 后添加 `&case=1`，即可打开聚焦的 ChatGPT 风格结果视图。
 
+### 全部 34 种 RenderEnvelope 类型
+
+<details open>
+<summary><strong>文本、结构化数据、图表与图示</strong></summary>
 <table>
-  <tr><td width="50%"><img src="docs/images/cases/widget.stock.png" alt="ModelCanvas 股票结果"><br><strong>股票</strong>：区间切换、ECharts 曲线、指标与数据来源</td><td width="50%"><img src="docs/images/cases/audio.pronunciation.png" alt="ModelCanvas 发音与音频结果"><br><strong>发音</strong>：拼音、IPA、本地音频下载与可选 Provider MP3</td></tr>
-  <tr><td><img src="docs/images/cases/widget.sports.png" alt="ModelCanvas 体育对阵图"><br><strong>体育</strong>：阶段切换、完赛比分与待赛场次</td><td><img src="docs/images/cases/diagram.mermaid.png" alt="ModelCanvas Mermaid 时间线"><br><strong>Mermaid</strong>：源码编辑、运行、缩放、SVG 导出和全屏</td></tr>
+  <tr><td width="50%"><img src="docs/images/cases/text.markdown.png" alt="Markdown 渲染器"><br><code>text.markdown</code></td><td width="50%"><img src="docs/images/cases/text.code.png" alt="代码渲染器"><br><code>text.code</code></td></tr>
+  <tr><td><img src="docs/images/cases/text.math.png" alt="数学公式渲染器"><br><code>text.math</code></td><td><img src="docs/images/cases/data.table.png" alt="表格渲染器"><br><code>data.table</code></td></tr>
+  <tr><td><img src="docs/images/cases/data.json.png" alt="JSON 渲染器"><br><code>data.json</code></td><td><img src="docs/images/cases/chart.echarts.png" alt="ECharts 渲染器"><br><code>chart.echarts</code></td></tr>
+  <tr><td><img src="docs/images/cases/chart.vega-lite.png" alt="Vega-Lite 渲染器"><br><code>chart.vega-lite</code></td><td><img src="docs/images/cases/diagram.mermaid.png" alt="Mermaid 渲染器"><br><code>diagram.mermaid</code></td></tr>
+  <tr><td><img src="docs/images/cases/diagram.excalidraw.png" alt="Excalidraw 渲染器"><br><code>diagram.excalidraw</code></td><td></td></tr>
 </table>
+</details>
+
+<details>
+<summary><strong>媒体与文档</strong></summary>
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/media.image.png" alt="图片渲染器"><br><code>media.image</code></td><td width="50%"><img src="docs/images/cases/media.audio.png" alt="音频渲染器"><br><code>media.audio</code></td></tr>
+  <tr><td><img src="docs/images/cases/media.video.png" alt="视频渲染器"><br><code>media.video</code></td><td><img src="docs/images/cases/audio.pronunciation.png" alt="发音渲染器"><br><code>audio.pronunciation</code></td></tr>
+  <tr><td><img src="docs/images/cases/document.pdf.png" alt="PDF 渲染器"><br><code>document.pdf</code></td><td><img src="docs/images/cases/document.docx.png" alt="DOCX 渲染器"><br><code>document.docx</code></td></tr>
+  <tr><td><img src="docs/images/cases/document.spreadsheet.png" alt="电子表格渲染器"><br><code>document.spreadsheet</code></td><td><img src="docs/images/cases/document.presentation.png" alt="演示文稿渲染器"><br><code>document.presentation</code></td></tr>
+  <tr><td><img src="docs/images/cases/document.epub.png" alt="EPUB 渲染器"><br><code>document.epub</code></td><td></td></tr>
+</table>
+</details>
+
+<details>
+<summary><strong>Notebook、空间内容与开放式 Artifact</strong></summary>
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/data.notebook.png" alt="Notebook 渲染器"><br><code>data.notebook</code></td><td width="50%"><img src="docs/images/cases/data.parquet.png" alt="Parquet 渲染器"><br><code>data.parquet</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.geo.png" alt="GeoJSON 地图渲染器"><br><code>map.geo</code></td><td><img src="docs/images/cases/model.3d.png" alt="3D 模型渲染器"><br><code>model.3d</code></td></tr>
+  <tr><td><img src="docs/images/cases/artifact.html.png" alt="HTML Artifact 渲染器"><br><code>artifact.html</code></td><td><img src="docs/images/cases/artifact.react.png" alt="React Artifact 渲染器"><br><code>artifact.react</code></td></tr>
+  <tr><td><img src="docs/images/cases/artifact.python.png" alt="Python Artifact 渲染器"><br><code>artifact.python</code></td><td><img src="docs/images/cases/form.dynamic.png" alt="动态表单渲染器"><br><code>form.dynamic</code></td></tr>
+</table>
+</details>
+
+<details>
+<summary><strong>受控业务 Widget</strong></summary>
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/widget.weather.png" alt="天气 Widget"><br><code>widget.weather</code></td><td width="50%"><img src="docs/images/cases/widget.stock.png" alt="股票 Widget"><br><code>widget.stock</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.sports.png" alt="体育 Widget"><br><code>widget.sports</code></td><td><img src="docs/images/cases/widget.travel.png" alt="旅行 Widget"><br><code>widget.travel</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.product.png" alt="商品 Widget"><br><code>widget.product</code></td><td><img src="docs/images/cases/widget.calendar.png" alt="日历 Widget"><br><code>widget.calendar</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.email.png" alt="邮件 Widget"><br><code>widget.email</code></td><td><img src="docs/images/cases/widget.logistics.png" alt="物流 Widget"><br><code>widget.logistics</code></td></tr>
+</table>
+</details>
 
 ## 功能
 

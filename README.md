@@ -4,7 +4,7 @@
 
 ModelCanvas is a protocol-driven rendering bridge for rich model output. A model or tool emits a versioned `RenderEnvelope`; the host validates it, resolves a compatible renderer, and renders it inside an appropriate trust boundary.
 
-ModelCanvas 是一个面向模型富输出的协议化渲染桥。模型或工具只需返回带版本的 `RenderEnvelope`；宿主负责校验、选择兼容渲染器，并在正确的安全边界内呈现结果。
+![ModelCanvas social preview](./public/og.png)
 
 ## Rendered case gallery
 
