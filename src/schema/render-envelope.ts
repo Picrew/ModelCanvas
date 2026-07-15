@@ -14,6 +14,11 @@ export const RenderTypeSchema = z.enum([
   "text.markdown",
   "text.code",
   "text.math",
+  "math.plot",
+  "math.geometry",
+  "math.matrix",
+  "math.distribution",
+  "math.number-line",
   "data.table",
   "data.json",
   "chart.echarts",
@@ -32,7 +37,18 @@ export const RenderTypeSchema = z.enum([
   "data.notebook",
   "data.parquet",
   "map.geo",
+  "map.places",
+  "map.route",
+  "map.heatmap",
+  "map.track",
   "model.3d",
+  "science.molecule",
+  "science.reaction",
+  "science.optics",
+  "engineering.circuit",
+  "engineering.waveform",
+  "engineering.timing",
+  "engineering.logic",
   "artifact.html",
   "artifact.react",
   "artifact.python",
@@ -159,6 +175,182 @@ const MathPayloadSchema = z
   .object({
     latex: z.string().min(1).max(100_000),
     display: z.enum(["inline", "block"]).default("block"),
+  })
+  .strict();
+
+const DomainSchema = z
+  .tuple([z.number().finite(), z.number().finite()])
+  .refine(([start, end]) => end > start, "Domain end must exceed start");
+
+const Point2dSchema = z
+  .object({
+    x: z.number().finite(),
+    y: z.number().finite(),
+    label: z.string().max(80).optional(),
+  })
+  .strict();
+
+const MathPlotPayloadSchema = z
+  .object({
+    xDomain: DomainSchema,
+    yDomain: DomainSchema,
+    xLabel: z.string().max(80).optional(),
+    yLabel: z.string().max(80).optional(),
+    showGrid: z.boolean().default(true),
+    series: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            label: z.string().min(1).max(160),
+            color: z.string().max(40).optional(),
+            points: z.array(Point2dSchema).min(2).max(5_000),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(20),
+  })
+  .strict();
+
+const MathGeometryPayloadSchema = z
+  .object({
+    xDomain: DomainSchema,
+    yDomain: DomainSchema,
+    points: z
+      .array(Point2dSchema.extend({ id: z.string().min(1).max(120) }).strict())
+      .min(1)
+      .max(300),
+    segments: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            from: z.string().min(1).max(120),
+            to: z.string().min(1).max(120),
+            label: z.string().max(80).optional(),
+            dashed: z.boolean().default(false),
+          })
+          .strict(),
+      )
+      .max(500)
+      .default([]),
+    polygons: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            vertices: z.array(z.string().min(1).max(120)).min(3).max(100),
+            label: z.string().max(80).optional(),
+            color: z.string().max(40).optional(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .default([]),
+    circles: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            center: z.string().min(1).max(120),
+            radius: z.number().positive().finite(),
+            label: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .default([]),
+  })
+  .strict();
+
+const MatrixValueSchema = z.union([z.number().finite(), z.string().max(80)]);
+const MatrixBlockSchema = z
+  .object({
+    id: z.string().min(1).max(120),
+    label: z.string().max(120).optional(),
+    values: z.array(z.array(MatrixValueSchema).min(1).max(20)).min(1).max(20),
+  })
+  .strict()
+  .refine(
+    ({ values }) => values.every((row) => row.length === values[0]?.length),
+    "Matrix rows must have equal length",
+  );
+
+const MathMatrixPayloadSchema = z
+  .object({
+    matrices: z.array(MatrixBlockSchema).min(1).max(6),
+    operators: z
+      .array(z.enum(["+", "-", "×", "=", "→"]))
+      .max(5)
+      .default([]),
+    highlightedCells: z
+      .array(
+        z
+          .object({
+            matrixId: z.string().min(1).max(120),
+            row: z.number().int().nonnegative(),
+            column: z.number().int().nonnegative(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .default([]),
+    annotation: z.string().max(1_000).optional(),
+  })
+  .strict()
+  .refine(
+    ({ matrices, operators }) =>
+      operators.length === 0 || operators.length === matrices.length - 1,
+    "Operators must appear between matrices",
+  );
+
+const MathDistributionPayloadSchema = z
+  .object({
+    kind: z.enum(["normal", "binomial", "poisson", "custom"]),
+    label: z.string().min(1).max(160),
+    points: z.array(Point2dSchema).min(2).max(5_000),
+    parameters: z.record(z.string(), z.number().finite()).default({}),
+    shadedRange: DomainSchema.optional(),
+    mean: z.number().finite().optional(),
+    median: z.number().finite().optional(),
+    standardDeviation: z.number().nonnegative().finite().optional(),
+  })
+  .strict();
+
+const MathNumberLinePayloadSchema = z
+  .object({
+    domain: DomainSchema,
+    step: z.number().positive().finite(),
+    intervals: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            start: z.number().finite(),
+            end: z.number().finite(),
+            startClosed: z.boolean().default(true),
+            endClosed: z.boolean().default(true),
+            label: z.string().max(120).optional(),
+            color: z.string().max(40).optional(),
+          })
+          .strict()
+          .refine(({ start, end }) => end >= start, "Invalid interval"),
+      )
+      .max(100)
+      .default([]),
+    points: z
+      .array(
+        z
+          .object({
+            value: z.number().finite(),
+            label: z.string().max(120).optional(),
+            color: z.string().max(40).optional(),
+          })
+          .strict(),
+      )
+      .max(100)
+      .default([]),
   })
   .strict();
 
@@ -425,6 +617,352 @@ const GeoPayloadSchema = z
       })
       .strict(),
     styleUrl: UrlStringSchema.optional(),
+  })
+  .strict();
+
+const GeoCoordinateSchema = z
+  .object({
+    longitude: z.number().min(-180).max(180),
+    latitude: z.number().min(-90).max(90),
+  })
+  .strict();
+
+const MapPlacesPayloadSchema = z
+  .object({
+    places: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            name: z.string().min(1).max(240),
+            category: z.string().min(1).max(120),
+            location: GeoCoordinateSchema,
+            address: z.string().max(500).optional(),
+            rating: z.number().min(0).max(5).optional(),
+            description: z.string().max(1_000).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(500),
+    selectedId: z.string().max(120).optional(),
+  })
+  .strict();
+
+const RoutePointSchema = GeoCoordinateSchema.extend({
+  label: z.string().max(160).optional(),
+}).strict();
+
+const MapRoutePayloadSchema = z
+  .object({
+    mode: z.enum(["walk", "bike", "drive", "transit", "flight"]),
+    path: z.array(RoutePointSchema).min(2).max(20_000),
+    waypoints: z.array(RoutePointSchema).max(100).default([]),
+    distanceKm: z.number().nonnegative().finite(),
+    durationMinutes: z.number().nonnegative().finite(),
+  })
+  .strict();
+
+const MapHeatmapPayloadSchema = z
+  .object({
+    points: z
+      .array(
+        GeoCoordinateSchema.extend({
+          intensity: z.number().min(0).max(1),
+          label: z.string().max(160).optional(),
+        }).strict(),
+      )
+      .min(1)
+      .max(100_000),
+    radius: z.number().min(5).max(100).default(28),
+    metric: z.string().min(1).max(160),
+  })
+  .strict();
+
+const MapTrackPayloadSchema = z
+  .object({
+    activity: z.enum(["walk", "run", "ride", "hike", "drive", "sail"]),
+    samples: z
+      .array(
+        GeoCoordinateSchema.extend({
+          time: z.string().min(1).max(120),
+          elevation: z.number().finite().optional(),
+          speed: z.number().nonnegative().finite().optional(),
+        }).strict(),
+      )
+      .min(2)
+      .max(100_000),
+    distanceKm: z.number().nonnegative().finite(),
+    durationMinutes: z.number().nonnegative().finite(),
+  })
+  .strict();
+
+const AtomSchema = z
+  .object({
+    id: z.string().min(1).max(80),
+    element: z.string().regex(/^[A-Z][a-z]?$/),
+    x: z.number().finite(),
+    y: z.number().finite(),
+    charge: z.number().int().min(-8).max(8).default(0),
+    label: z.string().max(40).optional(),
+  })
+  .strict();
+const BondSchema = z
+  .object({
+    from: z.string().min(1).max(80),
+    to: z.string().min(1).max(80),
+    order: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
+  })
+  .strict();
+const MoleculeSchema = z
+  .object({
+    id: z.string().min(1).max(120),
+    name: z.string().min(1).max(200),
+    formula: z.string().max(120).optional(),
+    atoms: z.array(AtomSchema).min(1).max(500),
+    bonds: z.array(BondSchema).max(800).default([]),
+  })
+  .strict();
+
+const ScienceMoleculePayloadSchema = z
+  .object({ molecule: MoleculeSchema })
+  .strict();
+
+const ScienceReactionPayloadSchema = z
+  .object({
+    reactants: z.array(MoleculeSchema).min(1).max(6),
+    products: z.array(MoleculeSchema).min(1).max(6),
+    conditions: z.string().max(300).optional(),
+    catalyst: z.string().max(160).optional(),
+    reversible: z.boolean().default(false),
+    balanced: z.boolean().default(false),
+  })
+  .strict();
+
+const ScienceOpticsPayloadSchema = z
+  .object({
+    axisY: z.number().finite().default(0),
+    xDomain: DomainSchema,
+    yDomain: DomainSchema,
+    elements: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            type: z.enum([
+              "source",
+              "convex-lens",
+              "concave-lens",
+              "mirror",
+              "screen",
+            ]),
+            x: z.number().finite(),
+            height: z.number().positive().finite(),
+            focalLength: z.number().finite().optional(),
+            label: z.string().max(120).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(50),
+    rays: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            color: z.string().max(40).optional(),
+            points: z.array(Point2dSchema).min(2).max(100),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
+
+const EngineeringCircuitPayloadSchema = z
+  .object({
+    title: z.string().max(240).optional(),
+    nodes: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            x: z.number().finite(),
+            y: z.number().finite(),
+            label: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(500),
+    components: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            type: z.enum([
+              "wire",
+              "resistor",
+              "capacitor",
+              "inductor",
+              "diode",
+              "led",
+              "switch",
+              "source",
+              "ground",
+            ]),
+            from: z.string().min(1).max(120),
+            to: z.string().min(1).max(120),
+            label: z.string().max(120).optional(),
+            value: z.string().max(120).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(800),
+  })
+  .strict();
+
+const EngineeringWaveformPayloadSchema = z
+  .object({
+    timeUnit: z.string().min(1).max(40),
+    channels: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            label: z.string().min(1).max(120),
+            unit: z.string().min(1).max(40),
+            color: z.string().max(40).optional(),
+            samples: z
+              .array(
+                z
+                  .object({
+                    time: z.number().finite(),
+                    value: z.number().finite(),
+                  })
+                  .strict(),
+              )
+              .min(2)
+              .max(20_000),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(16),
+    cursors: z
+      .array(
+        z
+          .object({
+            time: z.number().finite(),
+            label: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .max(20)
+      .default([]),
+  })
+  .strict();
+
+const LogicValueSchema = z.enum(["0", "1", "x", "z"]);
+const EngineeringTimingPayloadSchema = z
+  .object({
+    duration: z.number().positive().finite(),
+    timeUnit: z.string().min(1).max(40),
+    signals: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            label: z.string().min(1).max(120),
+            initial: LogicValueSchema,
+            transitions: z
+              .array(
+                z
+                  .object({
+                    time: z.number().nonnegative().finite(),
+                    value: LogicValueSchema,
+                  })
+                  .strict(),
+              )
+              .max(2_000)
+              .default([]),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(64),
+    markers: z
+      .array(
+        z
+          .object({
+            time: z.number().nonnegative().finite(),
+            label: z.string().min(1).max(80),
+          })
+          .strict(),
+      )
+      .max(50)
+      .default([]),
+  })
+  .strict();
+
+const EngineeringLogicPayloadSchema = z
+  .object({
+    gates: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            type: z.enum(["and", "or", "not", "xor", "nand", "nor", "buffer"]),
+            x: z.number().finite(),
+            y: z.number().finite(),
+            label: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(200),
+    connections: z
+      .array(
+        z
+          .object({
+            from: z.string().min(1).max(120),
+            to: z.string().min(1).max(120),
+            label: z.string().max(80).optional(),
+          })
+          .strict(),
+      )
+      .max(400)
+      .default([]),
+    inputs: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            label: z.string().min(1).max(80),
+            x: z.number().finite(),
+            y: z.number().finite(),
+            value: z.union([z.literal(0), z.literal(1)]).optional(),
+          })
+          .strict(),
+      )
+      .max(64)
+      .default([]),
+    outputs: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(120),
+            label: z.string().min(1).max(80),
+            x: z.number().finite(),
+            y: z.number().finite(),
+            value: z.union([z.literal(0), z.literal(1)]).optional(),
+          })
+          .strict(),
+      )
+      .max(64)
+      .default([]),
   })
   .strict();
 
@@ -766,6 +1304,11 @@ export const RenderEnvelopeSchema = z.discriminatedUnion("type", [
   envelope("text.markdown", MarkdownPayloadSchema),
   envelope("text.code", CodePayloadSchema),
   envelope("text.math", MathPayloadSchema),
+  envelope("math.plot", MathPlotPayloadSchema),
+  envelope("math.geometry", MathGeometryPayloadSchema),
+  envelope("math.matrix", MathMatrixPayloadSchema),
+  envelope("math.distribution", MathDistributionPayloadSchema),
+  envelope("math.number-line", MathNumberLinePayloadSchema),
   envelope("data.table", TablePayloadSchema),
   envelope("data.json", JsonPayloadSchema),
   envelope("chart.echarts", EChartsPayloadSchema),
@@ -784,7 +1327,18 @@ export const RenderEnvelopeSchema = z.discriminatedUnion("type", [
   envelope("data.notebook", NotebookPayloadSchema),
   envelope("data.parquet", ParquetPayloadSchema),
   envelope("map.geo", GeoPayloadSchema),
+  envelope("map.places", MapPlacesPayloadSchema),
+  envelope("map.route", MapRoutePayloadSchema),
+  envelope("map.heatmap", MapHeatmapPayloadSchema),
+  envelope("map.track", MapTrackPayloadSchema),
   envelope("model.3d", Model3dPayloadSchema),
+  envelope("science.molecule", ScienceMoleculePayloadSchema),
+  envelope("science.reaction", ScienceReactionPayloadSchema),
+  envelope("science.optics", ScienceOpticsPayloadSchema),
+  envelope("engineering.circuit", EngineeringCircuitPayloadSchema),
+  envelope("engineering.waveform", EngineeringWaveformPayloadSchema),
+  envelope("engineering.timing", EngineeringTimingPayloadSchema),
+  envelope("engineering.logic", EngineeringLogicPayloadSchema),
   envelope("artifact.html", HtmlArtifactPayloadSchema),
   envelope("artifact.react", ReactArtifactPayloadSchema),
   envelope("artifact.python", PythonArtifactPayloadSchema),
@@ -821,6 +1375,11 @@ export const schemas = {
   markdown: MarkdownPayloadSchema,
   code: CodePayloadSchema,
   math: MathPayloadSchema,
+  mathPlot: MathPlotPayloadSchema,
+  mathGeometry: MathGeometryPayloadSchema,
+  mathMatrix: MathMatrixPayloadSchema,
+  mathDistribution: MathDistributionPayloadSchema,
+  mathNumberLine: MathNumberLinePayloadSchema,
   table: TablePayloadSchema,
   json: JsonPayloadSchema,
   echarts: EChartsPayloadSchema,
@@ -831,6 +1390,17 @@ export const schemas = {
   audio: AudioPayloadSchema,
   video: VideoPayloadSchema,
   pronunciation: PronunciationPayloadSchema,
+  mapPlaces: MapPlacesPayloadSchema,
+  mapRoute: MapRoutePayloadSchema,
+  mapHeatmap: MapHeatmapPayloadSchema,
+  mapTrack: MapTrackPayloadSchema,
+  scienceMolecule: ScienceMoleculePayloadSchema,
+  scienceReaction: ScienceReactionPayloadSchema,
+  scienceOptics: ScienceOpticsPayloadSchema,
+  engineeringCircuit: EngineeringCircuitPayloadSchema,
+  engineeringWaveform: EngineeringWaveformPayloadSchema,
+  engineeringTiming: EngineeringTimingPayloadSchema,
+  engineeringLogic: EngineeringLogicPayloadSchema,
   weather: WeatherPayloadSchema,
   stock: StockPayloadSchema,
   sports: SportsPayloadSchema,

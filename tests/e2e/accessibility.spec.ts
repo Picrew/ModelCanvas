@@ -9,6 +9,9 @@ for (const route of [
   "/?scenario=pronunciation&case=1",
   "/?scenario=sports&case=1",
   "/?scenario=timeline&case=1",
+  "/?scenario=math-geometry&case=1",
+  "/?scenario=science-molecule&case=1",
+  "/?scenario=engineering-timing&case=1",
 ]) {
   test(`${route} has no serious accessibility violations`, async ({ page }) => {
     await page.goto(route, { waitUntil: "networkidle" });

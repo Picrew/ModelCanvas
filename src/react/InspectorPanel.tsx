@@ -14,6 +14,7 @@ import {
 import type { ParseResult } from "@/src/core";
 import type { AnyRenderEnvelope } from "@/src/schema";
 import type { RendererInspection } from "./RendererHost";
+import { useLanguage } from "./i18n";
 
 interface Props {
   envelope: AnyRenderEnvelope;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
+  const { tr } = useLanguage();
   const [tab, setTab] = useState<"trace" | "raw" | "schema">("trace");
   const [allCandidates, setAllCandidates] = useState(false);
   const raw = useMemo(() => JSON.stringify(envelope, null, 2), [envelope]);
@@ -32,13 +34,13 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
   return (
     <section
       className="inspector-panel"
-      aria-label="RenderEnvelope inspector"
+      aria-label={tr("RenderEnvelope inspector", "RenderEnvelope 检查器")}
       data-testid="protocol-inspector"
     >
       <header>
         <div>
-          <p className="eyebrow">Protocol Inspector</p>
-          <h2>Render decision</h2>
+          <p className="eyebrow">{tr("Protocol Inspector", "协议检查器")}</p>
+          <h2>{tr("Render decision", "渲染决策")}</h2>
         </div>
         <div className="segmented">
           <button
@@ -46,21 +48,21 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
             className={tab === "trace" ? "active" : ""}
             onClick={() => setTab("trace")}
           >
-            <Route /> Trace
+            <Route /> {tr("Trace", "追踪")}
           </button>
           <button
             type="button"
             className={tab === "schema" ? "active" : ""}
             onClick={() => setTab("schema")}
           >
-            <ShieldCheck /> Validation
+            <ShieldCheck /> {tr("Validation", "验证")}
           </button>
           <button
             type="button"
             className={tab === "raw" ? "active" : ""}
             onClick={() => setTab("raw")}
           >
-            <ChevronDown /> Raw JSON
+            <ChevronDown /> {tr("Raw JSON", "原始 JSON")}
           </button>
         </div>
       </header>
@@ -71,7 +73,7 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
             type="button"
             onClick={() => void navigator.clipboard.writeText(raw)}
           >
-            <Copy /> Copy JSON
+            <Copy /> {tr("Copy JSON", "复制 JSON")}
           </button>
           <pre>{raw}</pre>
         </div>
@@ -84,19 +86,26 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
             <div>
               <strong>
                 {parseResult.success
-                  ? "Envelope is valid"
-                  : "Envelope is invalid"}
+                  ? tr("Envelope is valid", "Envelope 有效")
+                  : tr("Envelope is invalid", "Envelope 无效")}
               </strong>
               <span>
                 {parseResult.success
-                  ? `Protocol ${envelope.version} · ${parseResult.unknownType ? "unknown type fallback" : "exact discriminated union"}`
-                  : `${parseResult.issues.length} schema issue(s)`}
+                  ? `Protocol ${envelope.version} · ${
+                      parseResult.unknownType
+                        ? tr("unknown type fallback", "未知类型备用处理")
+                        : tr("exact discriminated union", "精确可辨识联合")
+                    }`
+                  : tr(
+                      `${parseResult.issues.length} schema issue(s)`,
+                      `${parseResult.issues.length} 个结构问题`,
+                    )}
               </span>
             </div>
           </div>
           {parseResult.migrations.length ? (
             <div className="migration-list">
-              <h3>Migrations</h3>
+              <h3>{tr("Migrations", "迁移记录")}</h3>
               {parseResult.migrations.map((migration, index) => (
                 <div key={`${index}-${migration.description}`}>
                   <span>{migration.from}</span>
@@ -119,7 +128,7 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
               ))
             ) : (
               <div className="empty-issues">
-                <CheckCircle2 /> No validation issues
+                <CheckCircle2 /> {tr("No validation issues", "没有验证问题")}
               </div>
             )}
           </div>
@@ -128,12 +137,14 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
         <div className="trace-panel">
           <div className="trace-summary">
             <div>
-              <span>Selected renderer</span>
-              <strong>{inspection?.displayName ?? "Resolving…"}</strong>
+              <span>{tr("Selected renderer", "已选渲染器")}</span>
+              <strong>
+                {inspection?.displayName ?? tr("Resolving…", "正在解析…")}
+              </strong>
               <code>{inspection?.rendererId ?? "—"}</code>
             </div>
             <div>
-              <span>Render time</span>
+              <span>{tr("Render time", "渲染耗时")}</span>
               <strong>
                 {inspection?.renderMs !== undefined
                   ? `${inspection.renderMs} ms`
@@ -142,8 +153,10 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
               <Clock3 />
             </div>
             <div>
-              <span>Fallback</span>
-              <strong>{inspection?.trace.fallback ? "Yes" : "No"}</strong>
+              <span>{tr("Fallback", "备用处理")}</span>
+              <strong>
+                {inspection?.trace.fallback ? tr("Yes", "是") : tr("No", "否")}
+              </strong>
               {inspection?.trace.fallback ? (
                 <AlertTriangle />
               ) : (
@@ -153,12 +166,20 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
           </div>
           {inspection?.capabilities ? (
             <div className="capability-row">
-              <span>Capabilities</span>
-              {inspection.capabilities.streaming ? <b>Streaming</b> : null}
-              {inspection.capabilities.editing ? <b>Editing</b> : null}
-              {inspection.capabilities.fullscreen ? <b>Fullscreen</b> : null}
+              <span>{tr("Capabilities", "能力")}</span>
+              {inspection.capabilities.streaming ? (
+                <b>{tr("Streaming", "流式")}</b>
+              ) : null}
+              {inspection.capabilities.editing ? (
+                <b>{tr("Editing", "可编辑")}</b>
+              ) : null}
+              {inspection.capabilities.fullscreen ? (
+                <b>{tr("Fullscreen", "全屏")}</b>
+              ) : null}
               {inspection.capabilities.export?.map((format) => (
-                <b key={format}>Export {format}</b>
+                <b key={format}>
+                  {tr("Export", "导出")} {format}
+                </b>
               ))}
             </div>
           ) : null}
@@ -176,7 +197,7 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
             ))}
             {!inspection ? (
               <div className="trace-waiting">
-                Waiting for renderer resolution…
+                {tr("Waiting for renderer resolution…", "等待渲染器解析…")}
               </div>
             ) : null}
             {candidates.length > visibleCandidates.length ? (
@@ -185,8 +206,10 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
                 type="button"
                 onClick={() => setAllCandidates(true)}
               >
-                Show {candidates.length - visibleCandidates.length} more
-                candidates
+                {tr(
+                  `Show ${candidates.length - visibleCandidates.length} more candidates`,
+                  `再显示 ${candidates.length - visibleCandidates.length} 个候选项`,
+                )}
               </button>
             ) : allCandidates && candidates.length > 5 ? (
               <button
@@ -194,7 +217,7 @@ export function InspectorPanel({ envelope, parseResult, inspection }: Props) {
                 type="button"
                 onClick={() => setAllCandidates(false)}
               >
-                Show less
+                {tr("Show less", "收起")}
               </button>
             ) : null}
           </div>

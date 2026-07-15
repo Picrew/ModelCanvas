@@ -36,6 +36,44 @@ const capabilities: Record<RenderType, CapabilityEntry> = {
     extensions: ["tex"],
     export: ["tex"],
   },
+  "math.plot": {
+    displayName: "Mathematical Plot",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.math-plot+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "math.geometry": {
+    displayName: "Geometry Construction",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.math-geometry+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "math.matrix": {
+    displayName: "Matrix Operation",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.math-matrix+json"],
+    extensions: [],
+    export: ["json"],
+  },
+  "math.distribution": {
+    displayName: "Probability Distribution",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.math-distribution+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "math.number-line": {
+    displayName: "Number Line",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.math-number-line+json"],
+    extensions: [],
+    export: ["json", "svg"],
+  },
   "data.table": {
     displayName: "Data Table",
     group: "Data",
@@ -201,6 +239,38 @@ const capabilities: Record<RenderType, CapabilityEntry> = {
     fullscreen: true,
     export: ["geojson", "png"],
   },
+  "map.places": {
+    displayName: "Places Map",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.map-places+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["geojson", "png"],
+  },
+  "map.route": {
+    displayName: "Route Map",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.map-route+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["geojson", "png"],
+  },
+  "map.heatmap": {
+    displayName: "Spatial Heatmap",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.map-heatmap+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["geojson", "png"],
+  },
+  "map.track": {
+    displayName: "Activity Track",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.map-track+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["geojson", "png"],
+  },
   "model.3d": {
     displayName: "3D Model",
     group: "Spatial",
@@ -214,6 +284,62 @@ const capabilities: Record<RenderType, CapabilityEntry> = {
     extensions: ["gltf", "glb", "obj", "stl", "ply"],
     fullscreen: true,
     export: ["source"],
+  },
+  "science.molecule": {
+    displayName: "Molecular Structure",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.science-molecule+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "science.reaction": {
+    displayName: "Chemical Reaction",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.science-reaction+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "science.optics": {
+    displayName: "Optics Ray Diagram",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.science-optics+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "engineering.circuit": {
+    displayName: "Circuit Schematic",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.engineering-circuit+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "engineering.waveform": {
+    displayName: "Engineering Waveform",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.engineering-waveform+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "engineering.timing": {
+    displayName: "Digital Timing Diagram",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.engineering-timing+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
+  },
+  "engineering.logic": {
+    displayName: "Logic Circuit",
+    group: "Technical",
+    mimeTypes: ["application/vnd.modelcanvas.engineering-logic+json"],
+    extensions: [],
+    fullscreen: true,
+    export: ["json", "svg"],
   },
   "artifact.html": {
     displayName: "HTML Artifact",
@@ -347,6 +473,14 @@ function register(
 register("text.markdown", () => import("@/src/renderers/MarkdownRenderer"));
 register("text.code", () => import("@/src/renderers/DataRenderer"));
 register("text.math", () => import("@/src/renderers/DataRenderer"));
+register("math.plot", () => import("@/src/renderers/TechnicalRenderer"));
+register("math.geometry", () => import("@/src/renderers/TechnicalRenderer"));
+register("math.matrix", () => import("@/src/renderers/TechnicalRenderer"));
+register(
+  "math.distribution",
+  () => import("@/src/renderers/TechnicalRenderer"),
+);
+register("math.number-line", () => import("@/src/renderers/TechnicalRenderer"));
 register("data.table", () => import("@/src/renderers/DataRenderer"));
 register("data.json", () => import("@/src/renderers/DataRenderer"));
 register("data.notebook", () => import("@/src/renderers/DataRenderer"));
@@ -374,7 +508,30 @@ register(
 );
 register("document.epub", () => import("@/src/renderers/DocumentRenderer"));
 register("map.geo", () => import("@/src/renderers/SpatialRenderer"));
+register("map.places", () => import("@/src/renderers/SpatialRenderer"));
+register("map.route", () => import("@/src/renderers/SpatialRenderer"));
+register("map.heatmap", () => import("@/src/renderers/SpatialRenderer"));
+register("map.track", () => import("@/src/renderers/SpatialRenderer"));
 register("model.3d", () => import("@/src/renderers/SpatialRenderer"));
+register("science.molecule", () => import("@/src/renderers/TechnicalRenderer"));
+register("science.reaction", () => import("@/src/renderers/TechnicalRenderer"));
+register("science.optics", () => import("@/src/renderers/TechnicalRenderer"));
+register(
+  "engineering.circuit",
+  () => import("@/src/renderers/TechnicalRenderer"),
+);
+register(
+  "engineering.waveform",
+  () => import("@/src/renderers/TechnicalRenderer"),
+);
+register(
+  "engineering.timing",
+  () => import("@/src/renderers/TechnicalRenderer"),
+);
+register(
+  "engineering.logic",
+  () => import("@/src/renderers/TechnicalRenderer"),
+);
 register("artifact.html", () => import("@/src/renderers/ArtifactRenderer"));
 register("artifact.react", () => import("@/src/renderers/ArtifactRenderer"));
 register("artifact.python", () => import("@/src/renderers/ArtifactRenderer"));

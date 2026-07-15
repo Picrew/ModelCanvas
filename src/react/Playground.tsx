@@ -34,9 +34,11 @@ import {
   X,
 } from "lucide-react";
 import {
+  APP_BASE_PATH,
   deserializeRenderEnvelope,
   ipynbEnvelope,
   parseRenderEnvelope,
+  withBasePath,
   type ParseResult,
   type RendererEvent,
 } from "@/src/core";
@@ -53,23 +55,41 @@ import type {
 } from "@/src/schema";
 import { validateFile } from "@/src/security";
 import { InspectorPanel } from "./InspectorPanel";
+import { LanguageToggle, useLanguage, type Locale } from "./i18n";
 import { RendererHost, type RendererInspection } from "./RendererHost";
-import { rendererRegistry } from "./renderer-registry";
+import {
+  rendererCapabilityCatalog,
+  rendererRegistry,
+} from "./renderer-registry";
 
 interface SessionItem {
   id: string;
   prompt: string;
   scenario: DemoScenario;
   createdAt: string;
+  replayed?: boolean;
 }
-type ProviderId = "demo" | "openai" | "anthropic" | "compatible";
+type ProviderId = "demo" | "deepseek" | "openai" | "anthropic" | "compatible";
 
 const providerLabels: Record<ProviderId, string> = {
   demo: "Demo Provider",
+  deepseek: "DeepSeek V4 Flash",
   openai: "OpenAI",
   anthropic: "Anthropic",
-  compatible: "OpenAI-compatible",
+  compatible: "FreeLLM API",
 };
+
+const chineseCategoryLabels: Record<string, string> = {
+  "Start here": "入门",
+  Charts: "图表",
+  Media: "媒体",
+  "Data & spatial": "数据与空间",
+  Documents: "文档",
+  Artifacts: "交互作品",
+  Technical: "专业技术",
+};
+
+const renderCapabilityCount = Object.keys(rendererCapabilityCatalog).length;
 
 function downloadJson(value: unknown, name: string) {
   const url = URL.createObjectURL(
@@ -188,21 +208,34 @@ function csvEnvelope(text: string, file: File): unknown {
 function scenarioForEnvelope(
   envelope: KnownRenderEnvelope,
   title = "Pasted RenderEnvelope",
+  replayed = false,
+  locale: Locale = "en",
 ): DemoScenario {
   return {
     id: `custom-${envelope.id}`,
     title,
-    description: "Validated local envelope",
+    description:
+      locale === "zh"
+        ? replayed
+          ? "稳定复刻 · 完全一致的已验证结果"
+          : "模型新生成 · 已验证结果"
+        : replayed
+          ? "Stable replay · identical validated envelope"
+          : "Fresh model result · validated envelope",
     category: "Start here",
     prompt: title,
     envelope,
+    replayed,
   };
 }
 
 export function Playground() {
+  const { locale, tr } = useLanguage();
   const [scenario, setScenario] = useState(defaultScenario);
   const [prompt, setPrompt] = useState("");
-  const [provider, setProvider] = useState<ProviderId>("demo");
+  const [provider, setProvider] = useState<ProviderId>("deepseek");
+  const [targetType, setTargetType] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [history, setHistory] = useState<SessionItem[]>([]);
   const [inspection, setInspection] = useState<RendererInspection>();
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -222,12 +255,24 @@ export function Playground() {
   const artifactRef = useRef<HTMLElement>(null);
   const objectUrls = useRef<string[]>([]);
   const envelope = scenario.envelope as AnyRenderEnvelope;
+  const activeProviderLabel =
+    provider === "demo"
+      ? tr("Demo Provider", "演示模式")
+      : providerLabels[provider];
   const parseResult = useMemo<ParseResult>(
     () => parseRenderEnvelope(envelope),
     [envelope],
   );
   const categories = useMemo(
     () => [...new Set(allDemoScenarios.map((item) => item.category))],
+    [],
+  );
+  const renderTypeOptions = useMemo(
+    () =>
+      rendererRegistry
+        .manifest()
+        .filter((item) => item.type !== "*")
+        .sort((left, right) => left.type.localeCompare(right.type)),
     [],
   );
   const visibleScenarios = useMemo(
@@ -271,7 +316,11 @@ export function Playground() {
     setRendererOverride("");
     setProviderError(undefined);
     setSidebarOpen(false);
-    window.history.replaceState(null, "", `?scenario=${next.id}`);
+    window.history.replaceState(
+      null,
+      "",
+      `${APP_BASE_PATH || window.location.pathname}?scenario=${next.id}`,
+    );
     window.requestAnimationFrame(() =>
       artifactRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -284,11 +333,15 @@ export function Playground() {
     [],
   );
   const runPrompt = async () => {
+    if (isSubmitting) return;
     const value = prompt.trim();
     if (!value) return;
     setProviderError(undefined);
     if (provider === "demo") {
-      const next = findAnyScenario(value);
+      const next = targetType
+        ? (allDemoScenarios.find((item) => item.envelope.type === targetType) ??
+          findAnyScenario(value))
+        : findAnyScenario(value);
       chooseScenario(next);
       setHistory((current) =>
         [
@@ -300,6 +353,7 @@ export function Playground() {
               hour: "2-digit",
               minute: "2-digit",
             }),
+            replayed: true,
           },
           ...current,
         ].slice(0, 20),
@@ -307,20 +361,33 @@ export function Playground() {
       setPrompt("");
       return;
     }
+    setIsSubmitting(true);
     try {
-      const response = await fetch("/api/model", {
+      const response = await fetch(withBasePath("/api/model"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ provider, prompt: value }),
+        body: JSON.stringify({
+          provider,
+          prompt: value,
+          renderType: targetType || undefined,
+        }),
       });
-      const body = (await response.json()) as {
+      const responseText = await response.text();
+      let body: {
         envelope?: unknown;
         error?: string;
+        replayed?: boolean;
+        replayId?: string;
       };
-      if (!response.ok || !body.envelope)
+      try {
+        body = JSON.parse(responseText) as typeof body;
+      } catch {
         throw new Error(
-          body.error ?? `${providerLabels[provider]} request failed`,
+          `${activeProviderLabel} gateway request failed (${response.status}).`,
         );
+      }
+      if (!response.ok || !body.envelope)
+        throw new Error(body.error ?? `${activeProviderLabel} request failed`);
       const parsed = parseRenderEnvelope(body.envelope);
       if (!parsed.success || parsed.unknownType)
         throw new Error(
@@ -331,6 +398,8 @@ export function Playground() {
       const next = scenarioForEnvelope(
         parsed.data as KnownRenderEnvelope,
         value,
+        body.replayed,
+        locale,
       );
       chooseScenario(next);
       setHistory((current) => [
@@ -342,6 +411,7 @@ export function Playground() {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          replayed: body.replayed,
         },
         ...current,
       ]);
@@ -350,6 +420,8 @@ export function Playground() {
       setProviderError(
         cause instanceof Error ? cause.message : "Provider request failed",
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const handlePaste = () => {
@@ -362,7 +434,14 @@ export function Playground() {
       );
       return;
     }
-    chooseScenario(scenarioForEnvelope(parsed.data as KnownRenderEnvelope));
+    chooseScenario(
+      scenarioForEnvelope(
+        parsed.data as KnownRenderEnvelope,
+        tr("Pasted RenderEnvelope", "已粘贴的 RenderEnvelope"),
+        false,
+        locale,
+      ),
+    );
     setPasteOpen(false);
     setPasteError(undefined);
   };
@@ -401,7 +480,9 @@ export function Playground() {
             input = ipynbEnvelope(input, file.name);
         }
       } catch {
-        setProviderError("The uploaded JSON is malformed");
+        setProviderError(
+          tr("The uploaded JSON is malformed", "上传的 JSON 格式不正确"),
+        );
         return;
       }
     } else {
@@ -419,7 +500,12 @@ export function Playground() {
       return;
     }
     chooseScenario(
-      scenarioForEnvelope(parsed.data as KnownRenderEnvelope, file.name),
+      scenarioForEnvelope(
+        parsed.data as KnownRenderEnvelope,
+        file.name,
+        false,
+        locale,
+      ),
     );
   };
   const handleEvent = (event: RendererEvent) => {
@@ -467,12 +553,16 @@ export function Playground() {
           chooseScenario(
             scenarioForEnvelope(
               parsed.data as KnownRenderEnvelope,
-              "Chart from selected table",
+              tr("Chart from selected table", "由所选表格生成的图表"),
+              false,
+              locale,
             ),
           );
       }
     }
-    setEventNotice(`${event.action ?? event.type} · local event captured`);
+    setEventNotice(
+      `${event.action ?? event.type} · ${tr("local event captured", "已捕获本地事件")}`,
+    );
     window.setTimeout(() => setEventNotice(undefined), 3_000);
   };
 
@@ -483,7 +573,7 @@ export function Playground() {
           <button
             className="mobile-menu"
             type="button"
-            aria-label="Open examples"
+            aria-label={tr("Open examples", "打开示例")}
             onClick={() => setSidebarOpen(true)}
           >
             <Menu />
@@ -494,36 +584,45 @@ export function Playground() {
             </span>
             <span>
               <strong>ModelCanvas</strong>
-              <small>Universal render bridge</small>
+              <small>{tr("Universal render bridge", "通用渲染桥接器")}</small>
             </span>
           </Link>
         </div>
-        <nav aria-label="Primary navigation">
+        <nav aria-label={tr("Primary navigation", "主导航")}>
           <Link href="/" className="active">
-            <MessageSquareText /> Playground
+            <MessageSquareText /> {tr("Playground", "工作台")}
           </Link>
           <Link href="/gallery">
-            <GalleryHorizontalEnd /> Gallery
+            <GalleryHorizontalEnd /> {tr("Gallery", "组件库")}
           </Link>
           <Link href="/inspector">
-            <Braces /> Inspector
+            <Braces /> {tr("Inspector", "检查器")}
           </Link>
         </nav>
         <div className="top-actions">
           <span className="offline-badge">
-            <span /> Fixture mode
+            <span />{" "}
+            {tr(
+              `${renderCapabilityCount} render capabilities`,
+              `${renderCapabilityCount} 种渲染能力`,
+            )}
           </span>
+          <LanguageToggle />
           <button
             className="icon-button square"
             type="button"
-            aria-label={dark ? "Use light theme" : "Use dark theme"}
+            aria-label={
+              dark
+                ? tr("Use light theme", "使用浅色主题")
+                : tr("Use dark theme", "使用深色主题")
+            }
             onClick={toggleTheme}
           >
             {dark ? <Sun /> : <Moon />}
           </button>
           <a
             className="github-button"
-            href="https://github.com"
+            href="https://github.com/Picrew/ModelCanvas"
             target="_blank"
             rel="noreferrer"
           >
@@ -535,13 +634,13 @@ export function Playground() {
         <aside className={`scenario-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-heading">
             <div>
-              <p className="eyebrow">Offline scenarios</p>
-              <h2>Examples</h2>
+              <p className="eyebrow">{tr("Offline scenarios", "离线场景")}</p>
+              <h2>{tr("Examples", "示例")}</h2>
             </div>
             <button
               className="icon-button square mobile-only"
               type="button"
-              aria-label="Close examples"
+              aria-label={tr("Close examples", "关闭示例")}
               onClick={() => setSidebarOpen(false)}
             >
               <X />
@@ -549,18 +648,23 @@ export function Playground() {
           </div>
           <label className="sidebar-search">
             <Search />
-            <span className="sr-only">Search examples</span>
+            <span className="sr-only">{tr("Search examples", "搜索示例")}</span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={`Search ${allDemoScenarios.length} demos`}
+              placeholder={tr(
+                `Search ${allDemoScenarios.length} demos`,
+                `搜索 ${allDemoScenarios.length} 个示例`,
+              )}
             />
           </label>
           <div className="scenario-groups">
             {categories.map((category) => (
               <section key={category}>
                 <h3>
-                  {category}
+                  {locale === "zh"
+                    ? (chineseCategoryLabels[category] ?? category)
+                    : category}
                   <span>
                     {
                       visibleScenarios.filter(
@@ -606,7 +710,7 @@ export function Playground() {
           {history.length ? (
             <section className="history-section">
               <h3>
-                <History /> Session history
+                <History /> {tr("Session history", "会话历史")}
               </h3>
               {history.map((item) => (
                 <button
@@ -627,8 +731,13 @@ export function Playground() {
         <section className="conversation-panel" ref={conversationRef}>
           <div className="conversation-heading">
             <div>
-              <p className="eyebrow">Conversation</p>
-              <h1>Turn model output into trusted UI</h1>
+              <p className="eyebrow">{tr("Conversation", "对话")}</p>
+              <h1>
+                {tr(
+                  "Turn model output into trusted UI",
+                  "把模型输出转化为可信界面",
+                )}
+              </h1>
             </div>
             <button
               className="icon-button"
@@ -639,7 +748,7 @@ export function Playground() {
                 setPrompt("");
               }}
             >
-              <Trash2 /> Clear
+              <Trash2 /> {tr("Clear", "清空")}
             </button>
           </div>
           <div className="messages">
@@ -648,16 +757,28 @@ export function Playground() {
                 <Sparkles />
               </span>
               <div>
-                <h2>What would you like to render?</h2>
+                <h2>
+                  {tr("What would you like to render?", "你想渲染什么？")}
+                </h2>
                 <p>
-                  Ask naturally, upload a file, or open one of the examples.
+                  {tr(
+                    `Ask a model naturally, upload a file, or open any of the ${renderCapabilityCount} render capabilities.`,
+                    "直接向模型提问、上传文件，或打开任意一种渲染能力。",
+                  )}
                 </p>
                 <div className="suggestion-row">
-                  {[
-                    "北京未来七天天气",
-                    "“你好”怎么读并下载音频",
-                    "Create a project timeline",
-                  ].map((suggestion) => (
+                  {(locale === "zh"
+                    ? [
+                        "北京未来七天天气",
+                        "“你好”怎么读并下载音频",
+                        "创建一个项目时间线",
+                      ]
+                    : [
+                        "Beijing weather for the next seven days",
+                        'Pronounce "hello" and create audio',
+                        "Create a project timeline",
+                      ]
+                  ).map((suggestion) => (
                     <button
                       type="button"
                       key={suggestion}
@@ -679,7 +800,7 @@ export function Playground() {
                     <div>
                       <p>{item.prompt}</p>
                     </div>
-                    <span className="message-avatar">You</span>
+                    <span className="message-avatar">{tr("You", "你")}</span>
                   </article>
                   <article className="message assistant">
                     <span className="message-avatar">
@@ -687,9 +808,15 @@ export function Playground() {
                     </span>
                     <div>
                       <p>
-                        Validated and routed to{" "}
-                        <strong>{item.scenario.envelope.type}</strong>. The
-                        artifact panel shows the live result.
+                        {item.replayed
+                          ? tr("Replayed", "已复刻")
+                          : tr("Generated", "已生成")}
+                        {tr(" and routed to ", "并路由至 ")}
+                        <strong>{item.scenario.envelope.type}</strong>
+                        {tr(
+                          ". The artifact panel shows the live result.",
+                          "。下方结果区会显示实时效果。",
+                        )}
                       </p>
                       <button
                         type="button"
@@ -715,15 +842,28 @@ export function Playground() {
                   void runPrompt();
                 }
               }}
-              placeholder="Message ModelCanvas"
-              aria-label="Prompt"
+              placeholder={tr("Message ModelCanvas", "给 ModelCanvas 发消息")}
+              aria-label={tr("Prompt", "提问内容")}
             />
+            {isSubmitting ? (
+              <div
+                className="composer-loading"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="composer-loading-spinner" aria-hidden="true" />
+                <strong>
+                  {activeProviderLabel} {tr("is generating…", "正在生成…")}
+                </strong>
+                <span>{tr("Please wait", "请稍候")}</span>
+              </div>
+            ) : null}
             <div className="composer-row">
               <div className="composer-tools">
                 <button
                   className="composer-add"
                   type="button"
-                  aria-label="Add content"
+                  aria-label={tr("Add content", "添加内容")}
                   aria-expanded={toolsOpen}
                   onClick={() => setToolsOpen((value) => !value)}
                 >
@@ -748,25 +888,45 @@ export function Playground() {
                         fileInputRef.current?.click();
                       }}
                     >
-                      <FileUp /> Upload a file
+                      <FileUp /> {tr("Upload a file", "上传文件")}
                     </button>
                     <button
                       type="button"
-                      aria-label="Paste envelope"
+                      aria-label={tr("Paste envelope", "粘贴渲染数据")}
                       onClick={() => {
                         setToolsOpen(false);
                         setPasteOpen(true);
                       }}
                     >
-                      <FileJson /> Paste an envelope
+                      <FileJson /> {tr("Paste an envelope", "粘贴渲染数据")}
                     </button>
                   </div>
                 ) : null}
               </div>
               <div>
+                <label className="effect-select">
+                  <Layers3 />
+                  <span className="sr-only">
+                    {tr("Target effect", "目标效果")}
+                  </span>
+                  <select
+                    value={targetType}
+                    aria-label={tr("Target effect", "目标效果")}
+                    onChange={(event) => setTargetType(event.target.value)}
+                  >
+                    <option value="">
+                      {tr("Auto effect", "自动选择效果")}
+                    </option>
+                    {renderTypeOptions.map((item) => (
+                      <option value={item.type} key={item.type}>
+                        {item.type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <label className="provider-select">
                   <span className="fixture-dot" />
-                  <span className="sr-only">Provider</span>
+                  <span className="sr-only">{tr("Provider", "模型服务")}</span>
                   <select
                     value={provider}
                     onChange={(event) =>
@@ -775,19 +935,30 @@ export function Playground() {
                   >
                     {Object.entries(providerLabels).map(([id, label]) => (
                       <option value={id} key={id}>
-                        {label}
+                        {id === "demo"
+                          ? tr("Demo Provider", "演示模式")
+                          : label}
                       </option>
                     ))}
                   </select>
                 </label>
                 <button
-                  className="send-button"
+                  className={`send-button${isSubmitting ? " is-loading" : ""}`}
                   type="button"
-                  aria-label="Send prompt"
-                  disabled={!prompt.trim()}
+                  aria-label={
+                    isSubmitting
+                      ? tr("Generating response", "正在生成回复")
+                      : tr("Send prompt", "发送提问")
+                  }
+                  aria-busy={isSubmitting}
+                  disabled={!prompt.trim() || isSubmitting}
                   onClick={() => void runPrompt()}
                 >
-                  <ArrowUp />
+                  {isSubmitting ? (
+                    <span className="send-loading-spinner" aria-hidden="true" />
+                  ) : (
+                    <ArrowUp />
+                  )}
                 </button>
               </div>
             </div>
@@ -810,19 +981,23 @@ export function Playground() {
           ) : null}
           <header className="artifact-heading">
             <div>
-              <p className="eyebrow">Artifact</p>
+              <p className="eyebrow">{tr("Artifact", "渲染结果")}</p>
               <h2>{scenario.title}</h2>
               <span>{envelope.type}</span>
             </div>
             <div>
               <label className="renderer-select">
-                <span className="sr-only">Renderer override</span>
+                <span className="sr-only">
+                  {tr("Renderer override", "指定渲染器")}
+                </span>
                 <select
                   value={rendererOverride}
                   onChange={(event) => setRendererOverride(event.target.value)}
                 >
                   <option value="">
-                    Auto · {matchingRenderers[0]?.displayName ?? "Fallback"}
+                    {tr("Auto", "自动")} ·{" "}
+                    {matchingRenderers[0]?.displayName ??
+                      tr("Fallback", "备用渲染器")}
                   </option>
                   {matchingRenderers.map((renderer) => (
                     <option value={renderer.id} key={renderer.id}>
@@ -834,7 +1009,7 @@ export function Playground() {
               <button
                 className="icon-button square"
                 type="button"
-                aria-label="Copy envelope"
+                aria-label={tr("Copy envelope", "复制渲染数据")}
                 onClick={() =>
                   void navigator.clipboard.writeText(
                     JSON.stringify(envelope, null, 2),
@@ -846,7 +1021,7 @@ export function Playground() {
               <button
                 className="icon-button square"
                 type="button"
-                aria-label="Export example"
+                aria-label={tr("Export example", "导出示例")}
                 onClick={() => downloadJson(envelope, `${envelope.id}.json`)}
               >
                 <Download />
@@ -854,7 +1029,7 @@ export function Playground() {
               <button
                 className="icon-button square"
                 type="button"
-                aria-label="Fullscreen artifact"
+                aria-label={tr("Fullscreen artifact", "全屏显示结果")}
                 onClick={() => artifactRef.current?.requestFullscreen()}
               >
                 <Maximize2 />
@@ -863,10 +1038,15 @@ export function Playground() {
           </header>
           <div className="artifact-meta">
             <span>
-              <ShieldCheck /> Validated
+              <ShieldCheck /> {tr("Validated", "已验证")}
             </span>
             <span>
-              <span className="fixture-dot" /> Fixture data
+              <span className="fixture-dot" />
+              {scenario.id.startsWith("custom-")
+                ? scenario.replayed
+                  ? tr("Stable replay", "稳定复刻")
+                  : `${activeProviderLabel} ${tr("generated", "已生成")}`
+                : tr("Fixture data", "示例数据")}
             </span>
             <button
               type="button"
@@ -877,19 +1057,22 @@ export function Playground() {
                 })
               }
             >
-              <MessageSquareText /> Ask another
+              <MessageSquareText /> {tr("Ask another", "继续提问")}
             </button>
             <button
               type="button"
               onClick={() => setInspectorOpen((value) => !value)}
             >
-              <Braces /> {inspectorOpen ? "Hide" : "Show"} inspector
+              <Braces />{" "}
+              {inspectorOpen
+                ? tr("Hide inspector", "隐藏检查器")
+                : tr("Show inspector", "显示检查器")}
             </button>
           </div>
           <div
             className="artifact-scroll"
             role="region"
-            aria-label="Rendered artifact"
+            aria-label={tr("Rendered artifact", "已渲染结果")}
             tabIndex={0}
           >
             <RendererHost
@@ -923,13 +1106,17 @@ export function Playground() {
           >
             <header>
               <div>
-                <p className="eyebrow">Validate before render</p>
-                <h2 id="paste-title">Paste RenderEnvelope</h2>
+                <p className="eyebrow">
+                  {tr("Validate before render", "渲染前先验证")}
+                </p>
+                <h2 id="paste-title">
+                  {tr("Paste RenderEnvelope", "粘贴 RenderEnvelope")}
+                </h2>
               </div>
               <button
                 className="icon-button square"
                 type="button"
-                aria-label="Close"
+                aria-label={tr("Close", "关闭")}
                 onClick={() => setPasteOpen(false)}
               >
                 <X />
@@ -954,14 +1141,14 @@ export function Playground() {
                 type="button"
                 onClick={() => setPasteOpen(false)}
               >
-                Cancel
+                {tr("Cancel", "取消")}
               </button>
               <button
                 className="button primary"
                 type="button"
                 onClick={handlePaste}
               >
-                <ShieldCheck /> Validate & render
+                <ShieldCheck /> {tr("Validate & render", "验证并渲染")}
               </button>
             </footer>
           </section>

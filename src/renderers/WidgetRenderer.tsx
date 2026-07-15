@@ -22,7 +22,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import type { RendererComponentProps } from "@/src/core";
+import { withBasePath, type RendererComponentProps } from "@/src/core";
 import type { KnownRenderEnvelope } from "@/src/schema";
 
 type WidgetEnvelope = Extract<
@@ -361,7 +361,10 @@ function SportsWidget({
             <div>
               <b>
                 {game.homeCode ? (
-                  <img src={`/flags/${game.homeCode}.svg`} alt="" />
+                  <img
+                    src={withBasePath(`/flags/${game.homeCode}.svg`)}
+                    alt=""
+                  />
                 ) : null}
                 {game.home}
               </b>
@@ -370,7 +373,10 @@ function SportsWidget({
             <div>
               <b>
                 {game.awayCode ? (
-                  <img src={`/flags/${game.awayCode}.svg`} alt="" />
+                  <img
+                    src={withBasePath(`/flags/${game.awayCode}.svg`)}
+                    alt=""
+                  />
                 ) : null}
                 {game.away}
               </b>

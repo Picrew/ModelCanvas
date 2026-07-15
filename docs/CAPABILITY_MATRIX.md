@@ -7,6 +7,11 @@ All rows below have an exact schema, registry entry, deterministic demo or widge
 | text.markdown         | text/markdown, md             |         Yes |                No | md, html           | Yes       |
 | text.code             | text/plain, ts/js/py/css/html |          No |               Yes | source             | Yes       |
 | text.math             | text/x-tex, tex               |          No |                No | tex                | Yes       |
+| math.plot             | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| math.geometry         | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| math.matrix           | protocol JSON                 |          No |     View controls | json               | Yes       |
+| math.distribution     | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| math.number-line      | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
 | data.table            | CSV/TSV                       |          No |               Yes | csv, chart         | Yes       |
 | data.json             | JSON/YAML/XML/log             |          No |               Yes | source             | Yes       |
 | chart.echarts         | ECharts JSON                  |          No |                No | png, svg           | Yes       |
@@ -25,7 +30,18 @@ All rows below have an exact schema, registry entry, deterministic demo or widge
 | data.notebook         | IPYNB JSON                    |          No |      Cell folding | ipynb              | Yes       |
 | data.parquet          | Parquet/Arrow                 |          No |                No | csv, chart         | Yes       |
 | map.geo               | GeoJSON                       |          No |    Layer controls | geojson, png       | Yes       |
+| map.places            | protocol JSON                 |          No |    Layer controls | geojson, png       | Yes       |
+| map.route             | protocol JSON                 |          No |    Layer controls | geojson, png       | Yes       |
+| map.heatmap           | protocol JSON                 |          No |    Layer controls | geojson, png       | Yes       |
+| map.track             | protocol JSON                 |          No |    Layer controls | geojson, png       | Yes       |
 | model.3d              | GLTF/GLB/OBJ/STL/PLY          |          No |     View controls | source             | Yes       |
+| science.molecule      | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| science.reaction      | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| science.optics        | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| engineering.circuit   | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| engineering.waveform  | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| engineering.timing    | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
+| engineering.logic     | protocol JSON                 |          No |     View controls | json, svg          | Yes       |
 | artifact.html         | text/html                     |     Runtime |               Yes | html               | Yes       |
 | artifact.react        | TSX/JSX                       |     Runtime |               Yes | files              | Yes       |
 | artifact.python       | text/x-python                 |     Runtime |               Yes | py, output         | Yes       |

@@ -1,5 +1,7 @@
 import { parseRenderEnvelope } from "@/src/core";
+import { withBasePath } from "@/src/core/base-path";
 import type { KnownRenderEnvelope, RenderEnvelopeInput } from "@/src/schema";
+import { technicalScenarios } from "./technical";
 
 export interface DemoScenario {
   id: string;
@@ -11,9 +13,11 @@ export interface DemoScenario {
     | "Media"
     | "Documents"
     | "Artifacts"
+    | "Technical"
     | "Data & spatial";
   prompt: string;
   envelope: KnownRenderEnvelope;
+  replayed?: boolean;
 }
 
 const version = "1.0.0";
@@ -382,7 +386,7 @@ const pronunciationEnvelope = fixture({
     example: "你好，很高兴认识你。",
     accent: "us",
     speed: 0.8,
-    audioUrl: "/fixtures/ni-hao.wav",
+    audioUrl: withBasePath("/fixtures/ni-hao.wav"),
     ttsProvider:
       "macOS Ting-Ting fixture WAV · OpenAI MP3 available when configured",
   },
@@ -396,7 +400,7 @@ const audioEnvelope = fixture({
   presentation: { title: "Design systems, in 12 seconds" },
   payload: {
     source: {
-      url: "/fixtures/tone.wav",
+      url: withBasePath("/fixtures/tone.wav"),
       mimeType: "audio/wav",
       fileName: "modelcanvas-demo.wav",
     },
@@ -466,7 +470,7 @@ const pdfEnvelope = fixture({
   presentation: { title: "Protocol brief.pdf" },
   payload: {
     source: {
-      url: "/fixtures/protocol-brief.pdf",
+      url: withBasePath("/fixtures/protocol-brief.pdf"),
       mimeType: "application/pdf",
       fileName: "protocol-brief.pdf",
     },
@@ -480,7 +484,7 @@ const docxEnvelope = fixture({
   presentation: { title: "Product brief.docx" },
   payload: {
     source: {
-      url: "/fixtures/product-brief.docx",
+      url: withBasePath("/fixtures/product-brief.docx"),
       mimeType:
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       fileName: "product-brief.docx",
@@ -495,7 +499,7 @@ const spreadsheetEnvelope = fixture({
   presentation: { title: "Renderer metrics.xlsx" },
   payload: {
     source: {
-      url: "/fixtures/renderer-metrics.xlsx",
+      url: withBasePath("/fixtures/renderer-metrics.xlsx"),
       mimeType:
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       fileName: "renderer-metrics.xlsx",
@@ -532,7 +536,7 @@ const presentationEnvelope = fixture({
   presentation: { title: "ModelCanvas overview.pptx" },
   payload: {
     source: {
-      url: "/fixtures/modelcanvas-overview.pptx",
+      url: withBasePath("/fixtures/modelcanvas-overview.pptx"),
       mimeType:
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       fileName: "modelcanvas-overview.pptx",
@@ -584,7 +588,7 @@ const htmlEnvelope = fixture({
   payload: {
     allowedOrigins: [],
     timeoutMs: 5_000,
-    html: `<style>body{font-family:system-ui;background:#101528;color:#fff;display:grid;place-items:center;min-height:300px;margin:0}.timer{text-align:center;padding:32px;border:1px solid #2d385c;border-radius:24px;background:#171f37}.time{font-size:64px;font-weight:700;color:#9db8ff}button{border:0;border-radius:999px;padding:10px 18px;background:#5b8cff;color:#fff}</style><div class="timer"><p>FOCUS SESSION</p><div class="time" id="time">05:00</div><button onclick="document.getElementById('time').textContent='04:59';console.log('timer started')">Start</button></div>`,
+    html: `<style>body{font-family:system-ui;background:#101528;color:#fff;display:grid;place-items:center;min-height:300px;margin:0}.timer{text-align:center;padding:32px;border:1px solid #2d385c;border-radius:24px;background:#171f37}.time{font-size:64px;font-weight:700;color:#9db8ff}button{border:0;border-radius:999px;padding:10px 18px;background:#5b8cff;color:#fff}</style><div class="timer"><p>FOCUS SESSION</p><div class="time" id="time">05:00</div><button id="toggle">Start</button></div><script>(()=>{let remaining=300;let interval;const output=document.getElementById('time');const button=document.getElementById('toggle');const render=()=>{const minutes=String(Math.floor(remaining/60)).padStart(2,'0');const seconds=String(remaining%60).padStart(2,'0');output.textContent=minutes+':'+seconds};button.addEventListener('click',()=>{if(interval){clearInterval(interval);interval=undefined;button.textContent='Start';console.log('timer paused');return}button.textContent='Pause';console.log('timer started');interval=setInterval(()=>{remaining=Math.max(0,remaining-1);render();if(remaining===0){clearInterval(interval);interval=undefined;button.textContent='Restart';console.log('timer complete')}},1000)});render()})()</script>`,
   },
 });
 
@@ -598,13 +602,13 @@ const pythonEnvelope = fixture({
     trusted: false,
     sandbox: true,
     allowScripts: true,
-    allowNetwork: false,
-    allowedOrigins: [],
+    allowNetwork: true,
+    allowedOrigins: ["https://cdn.jsdelivr.net"],
   },
   payload: {
-    code: "import pandas as pd\nimport matplotlib.pyplot as plt\ndf = pd.DataFrame({'renderer':['Markdown','Charts','Docs','Artifacts'], 'coverage':[98,94,82,76]})\nprint(df.to_string(index=False))\ndf.plot.bar(x='renderer', y='coverage', color='#5B8CFF')\nplt.tight_layout()\nplt.show()",
+    code: "import pandas as pd\nimport matplotlib.pyplot as plt\ndf = pd.DataFrame({'renderer':['Markdown','Charts','Docs','Artifacts'], 'coverage':[98,94,82,76]})\nprint(df.to_string(index=False))\ndf.plot.bar(x='renderer', y='coverage', color='#5B8CFF')\nplt.tight_layout()\nplt.savefig('/tmp/modelcanvas-chart.png')\nplt.close()\nprint('Chart rendered in the isolated virtual filesystem')",
     packages: ["pandas", "matplotlib"],
-    timeoutMs: 10_000,
+    timeoutMs: 30_000,
     fixtureOutput: {
       stdout:
         " renderer  coverage\n Markdown        98\n   Charts        94\n     Docs        82\nArtifacts        76",
@@ -671,7 +675,7 @@ const modelEnvelope = fixture({
   presentation: { title: "3D model · octahedron" },
   payload: {
     source: {
-      url: "/fixtures/octahedron.stl",
+      url: withBasePath("/fixtures/octahedron.stl"),
       mimeType: "model/stl",
       fileName: "octahedron.stl",
     },
@@ -816,12 +820,12 @@ const comparisonEnvelope = fixture({
   presentation: { title: "Image comparison" },
   payload: {
     source: {
-      url: "/fixtures/before.png",
+      url: withBasePath("/fixtures/before.png"),
       mimeType: "image/png",
       fileName: "before.png",
     },
     comparisonSource: {
-      url: "/fixtures/after.png",
+      url: withBasePath("/fixtures/after.png"),
       mimeType: "image/png",
       fileName: "after.png",
     },
@@ -850,11 +854,11 @@ const videoEnvelope = fixture({
   presentation: { title: "Renderer walkthrough" },
   payload: {
     source: {
-      url: "/fixtures/walkthrough.webm",
+      url: withBasePath("/fixtures/walkthrough.webm"),
       mimeType: "video/webm",
       fileName: "walkthrough.webm",
     },
-    poster: "/fixtures/video-poster.png",
+    poster: withBasePath("/fixtures/video-poster.png"),
     chapters: [
       { id: "v1", start: 0, end: 3, text: "Validate" },
       { id: "v2", start: 3, end: 6, text: "Resolve" },
@@ -1046,7 +1050,7 @@ const epubEnvelope = fixture({
   presentation: { title: "ModelCanvas reading fixture.epub" },
   payload: {
     source: {
-      url: "/fixtures/modelcanvas-brief.epub",
+      url: withBasePath("/fixtures/modelcanvas-brief.epub"),
       mimeType: "application/epub+zip",
       fileName: "modelcanvas-brief.epub",
     },
@@ -1320,7 +1324,7 @@ const rawScenarios = [
   ],
 ] as const;
 
-export const demoScenarios: DemoScenario[] = rawScenarios.map(
+const baseScenarios: DemoScenario[] = rawScenarios.map(
   ([id, title, description, category, prompt, envelope]) => ({
     id,
     title,
@@ -1330,6 +1334,11 @@ export const demoScenarios: DemoScenario[] = rawScenarios.map(
     envelope,
   }),
 );
+
+export const demoScenarios: DemoScenario[] = [
+  ...baseScenarios,
+  ...technicalScenarios,
+];
 
 export const defaultScenario =
   demoScenarios.find((scenario) => scenario.id === "weather") ??

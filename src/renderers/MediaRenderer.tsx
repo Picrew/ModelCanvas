@@ -20,6 +20,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { RendererComponentProps } from "@/src/core";
+import { withBasePath } from "@/src/core/base-path";
 import type { KnownRenderEnvelope } from "@/src/schema";
 import { validateUrl } from "@/src/security";
 
@@ -505,7 +506,7 @@ function PronunciationView({
     setGenerating(true);
     setError(undefined);
     try {
-      const response = await fetch("/api/tts", {
+      const response = await fetch(withBasePath("/api/tts"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

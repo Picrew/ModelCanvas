@@ -20,3 +20,7 @@ Evidence is stored under `output/design-audit/`; renderer screenshots are under 
 ## Complete case-gallery extension
 
 The follow-up case-gallery pass added a focused ChatGPT-style result route for every one of the 34 protocol types, promoted all business widgets to individually openable scenarios, created 34 browser-rendered README images, and added durable desktop/mobile coverage that opens every focused case. Four supplied visual references drove deeper stock, pronunciation/audio, sports bracket, and Mermaid timeline refinements; the comparison and QA evidence is recorded in `design-qa.md`.
+
+## Professional technical category extension
+
+The 2026-07-15 extension added one unified `Technical` product category with 16 representative protocol types across Math, Maps, Science and Engineering. The selection favors broadly reusable primitives: sampled plots and distributions instead of executable equations; semantic places, routes, heatmaps and tracks on one map engine; structured molecules, reactions and optics; and data-only circuits, waveforms, timing diagrams and logic gates. Region maps remain covered by `map.geo`; floor plans, cell/crystal/astronomy scenes, mechanical CAD and semiconductor cross-sections are intentionally deferred until their domain schemas and interaction requirements justify dedicated renderers. The current catalog contains 50 protocol types, 55 deterministic scenarios and 50 browser-rendered README images.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Layers3,
@@ -14,8 +14,135 @@ import {
 import type { RendererComponentProps } from "@/src/core";
 import type { JsonValue, KnownRenderEnvelope } from "@/src/schema";
 
-type MapEnvelope = Extract<KnownRenderEnvelope, { type: "map.geo" }>;
+type MapEnvelope = Extract<
+  KnownRenderEnvelope,
+  {
+    type: "map.geo" | "map.places" | "map.route" | "map.heatmap" | "map.track";
+  }
+>;
 type ModelEnvelope = Extract<KnownRenderEnvelope, { type: "model.3d" }>;
+
+function mapPresentation(envelope: MapEnvelope): {
+  data: GeoJSON.FeatureCollection;
+  label: string;
+  summary: string;
+  heatmap: boolean;
+  heatmapRadius?: number;
+} {
+  if (envelope.type === "map.geo")
+    return {
+      data: envelope.payload.geojson as GeoJSON.FeatureCollection,
+      label: "GeoJSON map",
+      summary: `${envelope.payload.geojson.features.length} features`,
+      heatmap: false,
+    };
+  if (envelope.type === "map.places")
+    return {
+      data: {
+        type: "FeatureCollection",
+        features: envelope.payload.places.map((place) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [place.location.longitude, place.location.latitude],
+          },
+          properties: {
+            name: place.name,
+            category: place.category,
+            address: place.address ?? "",
+            rating: place.rating ?? null,
+          },
+        })),
+      },
+      label: "Places",
+      summary: `${envelope.payload.places.length} geocoded places`,
+      heatmap: false,
+    };
+  if (envelope.type === "map.route") {
+    const waypointFeatures = envelope.payload.waypoints.map((point) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [point.longitude, point.latitude],
+      },
+      properties: { name: point.label ?? "Waypoint" },
+    }));
+    return {
+      data: {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: envelope.payload.path.map((point) => [
+                point.longitude,
+                point.latitude,
+              ]),
+            },
+            properties: { name: `${envelope.payload.mode} route` },
+          },
+          ...waypointFeatures,
+        ],
+      },
+      label: "Route",
+      summary: `${envelope.payload.distanceKm} km · ${envelope.payload.durationMinutes} min · ${envelope.payload.mode}`,
+      heatmap: false,
+    };
+  }
+  if (envelope.type === "map.heatmap")
+    return {
+      data: {
+        type: "FeatureCollection",
+        features: envelope.payload.points.map((point) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [point.longitude, point.latitude],
+          },
+          properties: {
+            name: point.label ?? envelope.payload.metric,
+            weight: point.intensity,
+          },
+        })),
+      },
+      label: "Heatmap",
+      summary: `${envelope.payload.points.length} samples · ${envelope.payload.metric}`,
+      heatmap: true,
+      heatmapRadius: envelope.payload.radius,
+    };
+  return {
+    data: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: envelope.payload.samples.map((point) => [
+              point.longitude,
+              point.latitude,
+            ]),
+          },
+          properties: { name: `${envelope.payload.activity} track` },
+        },
+        ...[envelope.payload.samples[0], envelope.payload.samples.at(-1)].map(
+          (point, index) => ({
+            type: "Feature" as const,
+            geometry: {
+              type: "Point" as const,
+              coordinates: [point!.longitude, point!.latitude],
+            },
+            properties: { name: index ? "Finish" : "Start" },
+          }),
+        ),
+      ],
+    },
+    label: "Activity track",
+    summary: `${envelope.payload.distanceKm} km · ${envelope.payload.durationMinutes} min · ${envelope.payload.activity}`,
+    heatmap: false,
+  };
+}
 
 function collectCoordinates(
   value: JsonValue,
@@ -38,10 +165,12 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const [error, setError] = useState<string>();
   const [layers, setLayers] = useState({
-    points: true,
+    points: envelope.type !== "map.heatmap",
     lines: true,
     polygons: true,
+    heatmap: true,
   });
+  const presentation = useMemo(() => mapPresentation(envelope), [envelope]);
   useEffect(() => {
     let active = true;
     void import("maplibre-gl").then(({ default: maplibregl }) => {
@@ -83,7 +212,7 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
         map.on("load", () => {
           map.addSource("modelcanvas", {
             type: "geojson",
-            data: envelope.payload.geojson as GeoJSON.FeatureCollection,
+            data: presentation.data,
           });
           map.addLayer({
             id: "polygons",
@@ -96,6 +225,33 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
               "fill-outline-color": "#6f98ff",
             },
           });
+          if (presentation.heatmap)
+            map.addLayer({
+              id: "heatmap",
+              type: "heatmap",
+              source: "modelcanvas",
+              paint: {
+                "heatmap-weight": ["coalesce", ["get", "weight"], 0],
+                "heatmap-intensity": 1.25,
+                "heatmap-radius": presentation.heatmapRadius ?? 28,
+                "heatmap-opacity": 0.82,
+                "heatmap-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["heatmap-density"],
+                  0,
+                  "rgba(91,121,234,0)",
+                  0.25,
+                  "#6f98ff",
+                  0.55,
+                  "#43b88a",
+                  0.8,
+                  "#f0b44d",
+                  1,
+                  "#dc4c64",
+                ],
+              },
+            });
           map.addLayer({
             id: "lines",
             type: "line",
@@ -112,6 +268,9 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
             type: "circle",
             source: "modelcanvas",
             filter: ["==", ["geometry-type"], "Point"],
+            layout: {
+              visibility: presentation.heatmap ? "none" : "visible",
+            },
             paint: {
               "circle-radius": 9,
               "circle-color": "#f59e0b",
@@ -130,8 +289,10 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
                 )
                 .addTo(map);
             });
-          const coordinates = envelope.payload.geojson.features.flatMap(
-            (feature) => collectCoordinates(feature.geometry.coordinates),
+          const coordinates = presentation.data.features.flatMap((feature) =>
+            "coordinates" in feature.geometry
+              ? collectCoordinates(feature.geometry.coordinates as JsonValue)
+              : [],
           );
           if (coordinates.length) {
             const bounds = coordinates.reduce(
@@ -152,7 +313,7 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [envelope]);
+  }, [envelope, presentation]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map?.loaded()) return;
@@ -165,8 +326,7 @@ function MapView({ envelope }: { envelope: MapEnvelope }) {
     <section className="map-renderer" data-testid="map-renderer">
       <div className="renderer-toolbar">
         <span className="toolbar-note">
-          <Map /> Offline base · {envelope.payload.geojson.features.length}{" "}
-          GeoJSON features
+          <Map /> {presentation.label} · {presentation.summary} · offline base
         </span>
         <details className="layer-picker">
           <summary>
@@ -446,7 +606,13 @@ function ModelView({ envelope }: { envelope: ModelEnvelope }) {
 }
 
 export default function SpatialRenderer({ envelope }: RendererComponentProps) {
-  if (envelope.type === "map.geo")
+  if (
+    envelope.type === "map.geo" ||
+    envelope.type === "map.places" ||
+    envelope.type === "map.route" ||
+    envelope.type === "map.heatmap" ||
+    envelope.type === "map.track"
+  )
     return <MapView envelope={envelope as MapEnvelope} />;
   if (envelope.type === "model.3d")
     return <ModelView envelope={envelope as ModelEnvelope} />;

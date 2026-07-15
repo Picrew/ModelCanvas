@@ -10,7 +10,7 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 
 以下截图全部来自正在运行的 ModelCanvas 前端，不是设计稿。每个案例都有通过 Schema 校验的 fixture，并会明确标注示例数据。运行应用后，在任意场景 URL 后添加 `&case=1`，即可打开聚焦的 ChatGPT 风格结果视图。
 
-### 全部 34 种 RenderEnvelope 类型
+### 全部 50 种 RenderEnvelope 类型
 
 <details open>
 <summary><strong>文本、结构化数据、图表与图示</strong></summary>
@@ -20,6 +20,28 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
   <tr><td><img src="docs/images/cases/data.json.png" alt="JSON 渲染器"><br><code>data.json</code></td><td><img src="docs/images/cases/chart.echarts.png" alt="ECharts 渲染器"><br><code>chart.echarts</code></td></tr>
   <tr><td><img src="docs/images/cases/chart.vega-lite.png" alt="Vega-Lite 渲染器"><br><code>chart.vega-lite</code></td><td><img src="docs/images/cases/diagram.mermaid.png" alt="Mermaid 渲染器"><br><code>diagram.mermaid</code></td></tr>
   <tr><td><img src="docs/images/cases/diagram.excalidraw.png" alt="Excalidraw 渲染器"><br><code>diagram.excalidraw</code></td><td></td></tr>
+</table>
+</details>
+
+<details open>
+<summary><strong>专业技术渲染 · Math、Maps、Science 与 Engineering</strong></summary>
+
+| 子领域      | 首批代表类型                                      | 选择原因                                       |
+| ----------- | ------------------------------------------------- | ---------------------------------------------- |
+| Math        | plot、geometry、matrix、distribution、number-line | 覆盖坐标、约束、线性代数、概率与基础推理。     |
+| Maps        | places、route、heatmap、track                     | 用统一空间交互模型覆盖最常见的地点与路径任务。 |
+| Science     | molecule、reaction、optics                        | 分别代表结构、变化过程和基于光线的科学解释。   |
+| Engineering | circuit、waveform、timing、logic                  | 覆盖物理连接、采样信号和数字系统行为。         |
+
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/math.plot.png" alt="数学函数渲染器"><br><code>math.plot</code></td><td width="50%"><img src="docs/images/cases/math.geometry.png" alt="几何构造渲染器"><br><code>math.geometry</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.matrix.png" alt="矩阵运算渲染器"><br><code>math.matrix</code></td><td><img src="docs/images/cases/math.distribution.png" alt="概率分布渲染器"><br><code>math.distribution</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.number-line.png" alt="数轴渲染器"><br><code>math.number-line</code></td><td><img src="docs/images/cases/map.places.png" alt="地点地图渲染器"><br><code>map.places</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.route.png" alt="路线地图渲染器"><br><code>map.route</code></td><td><img src="docs/images/cases/map.heatmap.png" alt="地理热力图渲染器"><br><code>map.heatmap</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.track.png" alt="活动轨迹渲染器"><br><code>map.track</code></td><td><img src="docs/images/cases/science.molecule.png" alt="分子结构渲染器"><br><code>science.molecule</code></td></tr>
+  <tr><td><img src="docs/images/cases/science.reaction.png" alt="化学反应渲染器"><br><code>science.reaction</code></td><td><img src="docs/images/cases/science.optics.png" alt="光路渲染器"><br><code>science.optics</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.circuit.png" alt="电路原理图渲染器"><br><code>engineering.circuit</code></td><td><img src="docs/images/cases/engineering.waveform.png" alt="工程波形渲染器"><br><code>engineering.waveform</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.timing.png" alt="数字时序渲染器"><br><code>engineering.timing</code></td><td><img src="docs/images/cases/engineering.logic.png" alt="逻辑电路渲染器"><br><code>engineering.logic</code></td></tr>
 </table>
 </details>
 
@@ -57,8 +79,9 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 ## 功能
 
 - 三条渲染路径：受控 Widget、声明式组件目录、开放式沙箱 Artifact。
-- 34 种严格 Zod discriminated union，提供 JSON Schema、版本迁移、字段路径错误和未知类型 fallback。
-- 39 个确定性离线场景，覆盖全部 34 种协议类型；无需商业 API Key。
+- 50 种严格 Zod discriminated union，提供 JSON Schema、版本迁移、字段路径错误和未知类型 fallback。
+- 55 个确定性离线场景，覆盖全部 50 种协议类型；无需商业 API Key。
+- 统一的 Technical 专业技术大类，覆盖数学函数、几何、矩阵、概率、数轴、语义地图、分子、反应、光路、电路、工程波形、数字时序与逻辑电路。
 - Markdown、代码、数学、JSON/YAML/XML/日志、表格、ECharts、Vega-Lite、Mermaid、Excalidraw。
 - 图片、波形音频、发音、视频、PDF、DOCX、XLSX、PPTX、EPUB、Notebook、Parquet/Arrow。
 - MapLibre 地图、Three.js 3D、HTML/React/Python Artifact、动态表单。
@@ -91,6 +114,7 @@ npm run test:e2e
 复制 `.env.example` 后按需配置：
 
 - `OPENAI_API_KEY`：OpenAI / OpenAI-compatible Provider 与 TTS，仅服务端读取。
+- `DEEPSEEK_API_KEY`：DeepSeek V4 Flash Provider，仅服务端读取。
 - `ANTHROPIC_API_KEY`：Anthropic Provider，仅服务端读取。
 - `OFFICE_CONVERTER_URL`：可选 LibreOffice 转换服务。
 

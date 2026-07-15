@@ -10,7 +10,7 @@ ModelCanvas is a protocol-driven rendering bridge for rich model output. A model
 
 These are screenshots from the running ModelCanvas frontend—not design mockups. Every case is backed by a validated fixture, and sample data is visibly labeled. Run the app and append `&case=1` to any scenario URL for the focused, ChatGPT-style result view.
 
-### All 34 RenderEnvelope types
+### All 50 RenderEnvelope types
 
 <details open>
 <summary><strong>Text, structured data, charts and diagrams</strong></summary>
@@ -20,6 +20,28 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
   <tr><td><img src="docs/images/cases/data.json.png" alt="JSON renderer"><br><code>data.json</code></td><td><img src="docs/images/cases/chart.echarts.png" alt="ECharts renderer"><br><code>chart.echarts</code></td></tr>
   <tr><td><img src="docs/images/cases/chart.vega-lite.png" alt="Vega-Lite renderer"><br><code>chart.vega-lite</code></td><td><img src="docs/images/cases/diagram.mermaid.png" alt="Mermaid renderer"><br><code>diagram.mermaid</code></td></tr>
   <tr><td><img src="docs/images/cases/diagram.excalidraw.png" alt="Excalidraw renderer"><br><code>diagram.excalidraw</code></td><td></td></tr>
+</table>
+</details>
+
+<details open>
+<summary><strong>Professional technical rendering · Math, Maps, Science and Engineering</strong></summary>
+
+| Family      | Representative types                              | Why these were selected                                                                |
+| ----------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Math        | plot, geometry, matrix, distribution, number-line | Covers coordinates, constraints, linear algebra, probability and elementary reasoning. |
+| Maps        | places, route, heatmap, track                     | Reuses one geographic interaction model for the most common location and path tasks.   |
+| Science     | molecule, reaction, optics                        | Represents structure, transformation and ray-based scientific explanation.             |
+| Engineering | circuit, waveform, timing, logic                  | Covers physical connectivity, sampled signals and digital-system behavior.             |
+
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/math.plot.png" alt="Mathematical plot renderer"><br><code>math.plot</code></td><td width="50%"><img src="docs/images/cases/math.geometry.png" alt="Geometry renderer"><br><code>math.geometry</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.matrix.png" alt="Matrix renderer"><br><code>math.matrix</code></td><td><img src="docs/images/cases/math.distribution.png" alt="Probability distribution renderer"><br><code>math.distribution</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.number-line.png" alt="Number line renderer"><br><code>math.number-line</code></td><td><img src="docs/images/cases/map.places.png" alt="Places map renderer"><br><code>map.places</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.route.png" alt="Route map renderer"><br><code>map.route</code></td><td><img src="docs/images/cases/map.heatmap.png" alt="Spatial heatmap renderer"><br><code>map.heatmap</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.track.png" alt="Activity track renderer"><br><code>map.track</code></td><td><img src="docs/images/cases/science.molecule.png" alt="Molecule renderer"><br><code>science.molecule</code></td></tr>
+  <tr><td><img src="docs/images/cases/science.reaction.png" alt="Chemical reaction renderer"><br><code>science.reaction</code></td><td><img src="docs/images/cases/science.optics.png" alt="Optics ray renderer"><br><code>science.optics</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.circuit.png" alt="Circuit schematic renderer"><br><code>engineering.circuit</code></td><td><img src="docs/images/cases/engineering.waveform.png" alt="Engineering waveform renderer"><br><code>engineering.waveform</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.timing.png" alt="Digital timing renderer"><br><code>engineering.timing</code></td><td><img src="docs/images/cases/engineering.logic.png" alt="Logic circuit renderer"><br><code>engineering.logic</code></td></tr>
 </table>
 </details>
 
@@ -57,8 +79,9 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
 ## What is included
 
 - Three output paths: controlled widgets, declarative renderer catalog, and sandboxed open artifacts.
-- 34 exact Zod envelope variants and a registry with version, MIME, extension, priority, override, lazy-load, and fallback support.
-- 39 deterministic offline scenarios covering all 34 protocol variants across text, charts, diagrams, data, media, documents, maps, 3D, forms, widgets, and code artifacts.
+- 50 exact Zod envelope variants and a registry with version, MIME, extension, priority, override, lazy-load, and fallback support.
+- 55 deterministic offline scenarios covering all 50 protocol variants across text, charts, diagrams, data, media, documents, professional technical graphics, maps, 3D, forms, widgets, and code artifacts.
+- A unified Technical category for sampled math plots, geometry, matrices, probability, number lines, semantic maps, molecules, reactions, optics, circuit schematics, engineering waveforms, timing diagrams, and logic circuits.
 - A self-hosted React/TypeScript artifact runtime that compiles in an opaque, network-disabled iframe without a remote bundler.
 - Playground, protocol inspector, and renderer gallery.
 - MCP Apps, AG-UI, A2UI, OpenAI Apps, and Vercel AI SDK adapters.

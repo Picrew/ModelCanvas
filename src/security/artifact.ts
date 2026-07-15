@@ -16,10 +16,6 @@ export function sanitizeAllowedOrigins(origins: string[]): string[] {
   ].slice(0, 20);
 }
 
-function escapeClosingScript(value: string): string {
-  return value.replace(/<\/script/gi, "<\\/script");
-}
-
 export function buildArtifactSrcDoc(
   html: string,
   allowedOrigins: string[] = [],
@@ -51,5 +47,5 @@ export function buildArtifactSrcDoc(
     parent.postMessage({ channel: 'modelcanvas-artifact', level: 'ready', args: [] }, '*');
   })();
   <\/script>`;
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${escapeClosingScript(html)}${bridge}</body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${html}${bridge}</body></html>`;
 }

@@ -1,4 +1,5 @@
 export * from "./demo";
+export * from "./replay-cache";
 export * from "./remote";
 export * from "./tts";
 export * from "./types";

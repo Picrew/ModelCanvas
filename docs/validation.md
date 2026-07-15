@@ -1,6 +1,22 @@
 # Validation record
 
-Validation date: 2026-07-11. Environment: Node 23.10.0 (project supports Node 22.13+ and CI uses Node 24), npm 10.9.2, macOS. Results below are actual local executions.
+Baseline validation date: 2026-07-11. Environment: Node 23.10.0 (project supports Node 22.13+ and CI uses Node 24), npm 10.9.2, macOS. Results below are actual local executions.
+
+## Professional technical extension · 2026-07-15
+
+The protocol and renderer catalog expanded from 34 to 50 exact variants with one unified `Technical` category. Sixteen representative Math, Maps, Science and Engineering renderers now have strict data-only schemas, registry capabilities, deterministic fixtures, focused browser routes and real README screenshots. Browser review also corrected curve-color overrides, floating-point zero labels, heatmap presentation and an incomplete molecule fixture. A pre-existing mobile hydration race was fixed by keeping the Python Run control disabled until its event handler is ready.
+
+| Command                        | Result                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `npm run format:check`         | Passed                                                                    |
+| `npm run typecheck`            | Passed; 0 TypeScript errors                                               |
+| `npm run lint -- --quiet`      | Passed; 0 error-level findings                                            |
+| `npm test`                     | 11 files, 43/43 tests passed                                              |
+| `npm run build`                | Passed; standalone output generated                                       |
+| `npm run test:e2e`             | 60/60 passed across Chromium desktop and iPhone 13 mobile                 |
+| Focused type traversal         | All 50 types passed on both desktop and mobile                            |
+| Accessibility                  | No serious axe violations on core routes and representative technical UIs |
+| Browser-rendered documentation | 50 README case images, including 16 new technical renderer screenshots    |
 
 ## Ten iteration rounds
 

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { withBasePath } from "@/src/core/base-path";
+import { LanguageProvider } from "@/src/react/i18n";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,14 +21,17 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: base,
     title,
     description,
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+    icons: {
+      icon: withBasePath("/favicon.svg"),
+      shortcut: withBasePath("/favicon.svg"),
+    },
     openGraph: {
       title,
       description,
       type: "website",
       images: [
         {
-          url: new URL("/og.png", base).toString(),
+          url: new URL(withBasePath("/og.png"), base).toString(),
           width: 1731,
           height: 909,
           alt: "ModelCanvas universal rendering bridge",
@@ -37,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: [new URL("/og.png", base).toString()],
+      images: [new URL(withBasePath("/og.png"), base).toString()],
     },
   };
 }
@@ -50,9 +55,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="/katex/katex.min.css" />
+        <link rel="stylesheet" href={withBasePath("/katex/katex.min.css")} />
       </head>
-      <body>{children}</body>
+      <body>
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

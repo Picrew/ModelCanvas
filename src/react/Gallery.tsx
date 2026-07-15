@@ -17,8 +17,10 @@ import {
 } from "@/src/fixtures";
 import { RendererHost } from "./RendererHost";
 import { rendererRegistry } from "./renderer-registry";
+import { LanguageToggle, useLanguage } from "./i18n";
 
 export function Gallery() {
+  const { tr } = useLanguage();
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState("All");
   const [widgetState, setWidgetState] = useState<
@@ -27,13 +29,22 @@ export function Gallery() {
   const manifest = rendererRegistry
     .manifest()
     .filter((item) => item.type !== "*");
+  const technicalPrefixes = new Set(["math", "map", "science", "engineering"]);
   const groups = [
     "All",
-    ...new Set(manifest.map((item) => item.type.split(".")[0])),
+    ...new Set(
+      manifest.map((item) => {
+        const prefix = item.type.split(".")[0] ?? "other";
+        return technicalPrefixes.has(prefix) ? "Technical" : prefix;
+      }),
+    ),
   ];
   const filtered = manifest.filter(
     (item) =>
-      (group === "All" || item.type.startsWith(`${group}.`)) &&
+      (group === "All" ||
+        (group === "Technical"
+          ? technicalPrefixes.has(item.type.split(".")[0] ?? "")
+          : item.type.startsWith(`${group}.`))) &&
       (!search ||
         `${item.displayName} ${item.type}`
           .toLowerCase()
@@ -50,55 +61,62 @@ export function Gallery() {
     <main className="docs-shell">
       <header className="docs-topbar">
         <Link href="/" className="button secondary">
-          <ArrowLeft /> Playground
+          <ArrowLeft /> {tr("Playground", "工作台")}
         </Link>
         <div className="brand-link">
           <span className="logo-mark">
             <Blocks />
           </span>
           <span>
-            <strong>Component Gallery</strong>
-            <small>Renderers, widgets and states</small>
+            <strong>{tr("Component Gallery", "组件库")}</strong>
+            <small>
+              {tr("Renderers, widgets and states", "渲染器、组件与状态")}
+            </small>
           </span>
         </div>
-        <Link href="/inspector" className="button secondary">
-          <ShieldCheck /> Inspector
-        </Link>
+        <div className="docs-actions">
+          <LanguageToggle />
+          <Link href="/inspector" className="button secondary">
+            <ShieldCheck /> {tr("Inspector", "检查器")}
+          </Link>
+        </div>
       </header>
       <section className="docs-hero">
-        <p className="eyebrow">Component Gallery</p>
-        <h1>Renderer registry</h1>
+        <p className="eyebrow">{tr("Component Gallery", "组件库")}</p>
+        <h1>{tr("Renderer registry", "渲染器注册表")}</h1>
         <p>
-          Search formats and capabilities, then open any renderer with its
-          validated fixture.
+          {tr(
+            "Search formats and capabilities, then open any renderer with its validated fixture.",
+            "搜索格式和能力，并使用已验证的示例打开任意渲染器。",
+          )}
         </p>
         <div className="gallery-stats">
           <div>
             <strong>{manifest.length}</strong>
-            <span>registered renderers</span>
+            <span>{tr("registered renderers", "已注册渲染器")}</span>
           </div>
           <div>
             <strong>{widgetFixtures.length}</strong>
-            <span>business widgets</span>
+            <span>{tr("business widgets", "业务组件")}</span>
           </div>
           <div>
             <strong>3</strong>
-            <span>rendering paths</span>
+            <span>{tr("rendering paths", "渲染路径")}</span>
           </div>
         </div>
       </section>
       <section className="gallery-section">
         <div className="gallery-heading">
           <div>
-            <p className="eyebrow">Renderer registry</p>
-            <h2>All renderers</h2>
+            <p className="eyebrow">{tr("Renderer registry", "渲染器注册表")}</p>
+            <h2>{tr("All renderers", "全部渲染器")}</h2>
           </div>
           <label className="sidebar-search">
             <Search />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search renderers"
+              placeholder={tr("Search renderers", "搜索渲染器")}
             />
           </label>
         </div>
@@ -110,7 +128,7 @@ export function Gallery() {
               key={item}
               onClick={() => setGroup(item)}
             >
-              {item}
+              {item === "All" ? tr("All", "全部") : item}
             </button>
           ))}
         </div>
@@ -127,9 +145,15 @@ export function Gallery() {
                 <p className="eyebrow">{item.type}</p>
                 <h3>{item.displayName}</h3>
                 <div className="capability-tags">
-                  {item.supports.streaming ? <span>Streaming</span> : null}
-                  {item.supports.editing ? <span>Editing</span> : null}
-                  {item.supports.fullscreen ? <span>Fullscreen</span> : null}
+                  {item.supports.streaming ? (
+                    <span>{tr("Streaming", "流式")}</span>
+                  ) : null}
+                  {item.supports.editing ? (
+                    <span>{tr("Editing", "可编辑")}</span>
+                  ) : null}
+                  {item.supports.fullscreen ? (
+                    <span>{tr("Fullscreen", "全屏")}</span>
+                  ) : null}
                   {item.supports.export?.map((format) => (
                     <span key={format}>{format}</span>
                   ))}
@@ -139,7 +163,7 @@ export function Gallery() {
                     <dt>MIME</dt>
                     <dd>
                       {item.supports.mimeTypes?.slice(0, 2).join(", ") ||
-                        "Protocol data"}
+                        tr("Protocol data", "协议数据")}
                     </dd>
                   </div>
                   <div>
@@ -154,11 +178,15 @@ export function Gallery() {
                 </dl>
                 {scenario ? (
                   <Link href={`/?scenario=${scenario.id}&case=1`}>
-                    Open live demo →
+                    {tr("Open live demo", "打开实时示例")} →
                   </Link>
                 ) : (
                   <span className="schema-ready">
-                    <CheckCircle2 /> Schema + renderer registered
+                    <CheckCircle2 />{" "}
+                    {tr(
+                      "Schema + renderer registered",
+                      "数据结构与渲染器已注册",
+                    )}
                   </span>
                 )}
               </article>
@@ -169,8 +197,8 @@ export function Gallery() {
       <section className="gallery-section widget-gallery">
         <div className="gallery-heading">
           <div>
-            <p className="eyebrow">Controlled rendering</p>
-            <h2>Business widgets</h2>
+            <p className="eyebrow">{tr("Controlled rendering", "受控渲染")}</p>
+            <h2>{tr("Business widgets", "业务组件")}</h2>
           </div>
           <div className="segmented">
             {(["ready", "loading", "empty", "error"] as const).map((state) => (
@@ -180,7 +208,13 @@ export function Gallery() {
                 key={state}
                 onClick={() => setWidgetState(state)}
               >
-                {state}
+                {state === "ready"
+                  ? tr("ready", "就绪")
+                  : state === "loading"
+                    ? tr("loading", "加载中")
+                    : state === "empty"
+                      ? tr("empty", "空状态")
+                      : tr("error", "错误")}
               </button>
             ))}
           </div>
@@ -190,7 +224,7 @@ export function Gallery() {
             <article key={envelope.id}>
               <header>
                 <code>{envelope.type}</code>
-                <span>compact / full</span>
+                <span>{tr("compact / full", "紧凑 / 完整")}</span>
               </header>
               <RendererHost envelope={envelope} />
             </article>
@@ -199,25 +233,29 @@ export function Gallery() {
       </section>
       <section className="gallery-section states-grid">
         <div>
-          <p className="eyebrow">Declarative</p>
-          <h2>Catalog only</h2>
+          <p className="eyebrow">{tr("Declarative", "声明式")}</p>
+          <h2>{tr("Catalog only", "仅允许组件目录")}</h2>
           <p>
-            Dynamic forms can compose allow-listed fields, groups and wizard
-            steps. Unknown component names never become executable React.
+            {tr(
+              "Dynamic forms can compose allow-listed fields, groups and wizard steps. Unknown component names never become executable React.",
+              "动态表单只能组合允许列表中的字段、分组和向导步骤，未知组件名称不会成为可执行的 React。",
+            )}
           </p>
           <Link className="button primary" href="/?scenario=form">
-            Open form demo
+            {tr("Open form demo", "打开表单示例")}
           </Link>
         </div>
         <div>
-          <p className="eyebrow">Open-ended</p>
-          <h2>Sandbox required</h2>
+          <p className="eyebrow">{tr("Open-ended", "开放式")}</p>
+          <h2>{tr("Sandbox required", "必须使用沙箱")}</h2>
           <p>
-            HTML, React and Python have visible isolation, reset and stop
-            controls. Generated code never runs in the host window.
+            {tr(
+              "HTML, React and Python have visible isolation, reset and stop controls. Generated code never runs in the host window.",
+              "HTML、React 和 Python 都具有明确的隔离、重置和停止控制，生成的代码不会在宿主窗口中运行。",
+            )}
           </p>
           <Link className="button secondary" href="/?scenario=html">
-            Open sandbox demo
+            {tr("Open sandbox demo", "打开沙箱示例")}
           </Link>
         </div>
       </section>

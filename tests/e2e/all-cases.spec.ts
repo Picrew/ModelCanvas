@@ -4,6 +4,11 @@ const cases = [
   ["text.markdown", "markdown"],
   ["text.code", "code"],
   ["text.math", "math"],
+  ["math.plot", "math-plot"],
+  ["math.geometry", "math-geometry"],
+  ["math.matrix", "math-matrix"],
+  ["math.distribution", "math-distribution"],
+  ["math.number-line", "math-number-line"],
   ["data.table", "table"],
   ["data.json", "json"],
   ["chart.echarts", "bar"],
@@ -22,7 +27,18 @@ const cases = [
   ["data.notebook", "notebook"],
   ["data.parquet", "parquet"],
   ["map.geo", "map"],
+  ["map.places", "map-places"],
+  ["map.route", "map-route"],
+  ["map.heatmap", "map-heatmap"],
+  ["map.track", "map-track"],
   ["model.3d", "3d"],
+  ["science.molecule", "science-molecule"],
+  ["science.reaction", "science-reaction"],
+  ["science.optics", "science-optics"],
+  ["engineering.circuit", "engineering-circuit"],
+  ["engineering.waveform", "engineering-waveform"],
+  ["engineering.timing", "engineering-timing"],
+  ["engineering.logic", "engineering-logic"],
   ["artifact.html", "html"],
   ["artifact.react", "react"],
   ["artifact.python", "python"],
@@ -37,7 +53,7 @@ const cases = [
   ["form.dynamic", "form"],
 ] as const;
 
-test("all 34 focused cases render without renderer failures", async ({
+test("all 50 focused cases render without renderer failures", async ({
   page,
 }) => {
   test.slow();

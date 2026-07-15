@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import DOMPurify from "dompurify";
 import {
   Code2,
   Download,
@@ -47,7 +46,7 @@ export default function MermaidRenderer({ envelope }: RendererComponentProps) {
         startOnLoad: false,
         securityLevel: "strict",
         theme,
-        flowchart: { htmlLabels: false },
+        htmlLabels: false,
         sequence: { useMaxWidth: true },
       });
       try {
@@ -56,12 +55,10 @@ export default function MermaidRenderer({ envelope }: RendererComponentProps) {
           `modelcanvas-${id}-${themeNonce}`,
           code,
         );
-        if (active)
-          setSvg(
-            DOMPurify.sanitize(rendered.svg, {
-              USE_PROFILES: { svg: true, svgFilters: true },
-            }),
-          );
+        // Mermaid strict mode escapes HTML and disables click callbacks. Keep
+        // its generated SVG intact because SVG-profile sanitizers remove the
+        // foreignObject labels used by Mermaid 11, leaving empty nodes.
+        if (active) setSvg(rendered.svg);
       } catch (cause) {
         if (active)
           setError(

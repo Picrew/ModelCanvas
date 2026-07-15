@@ -46,6 +46,47 @@ function parseJsonEnvelope(value: unknown): AnyRenderEnvelope {
   return parsed.data;
 }
 
+function extractJsonObject(content: string): unknown {
+  try {
+    return JSON.parse(content) as unknown;
+  } catch {
+    // OpenAI-compatible providers sometimes wrap an otherwise valid object in
+    // a Markdown fence or a short reasoning preface, even in JSON mode.
+  }
+
+  const fence = content.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
+  if (fence) {
+    try {
+      return JSON.parse(fence.trim()) as unknown;
+    } catch {
+      // Fall through to the balanced-object scanner below.
+    }
+  }
+
+  const start = content.indexOf("{");
+  if (start < 0) throw new SyntaxError("No JSON object found");
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let index = start; index < content.length; index += 1) {
+    const character = content[index];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') quoted = false;
+      continue;
+    }
+    if (character === '"') quoted = true;
+    else if (character === "{") depth += 1;
+    else if (character === "}") {
+      depth -= 1;
+      if (depth === 0)
+        return JSON.parse(content.slice(start, index + 1)) as unknown;
+    }
+  }
+  throw new SyntaxError("Incomplete JSON object");
+}
+
 async function* singleEnvelope(envelope: AnyRenderEnvelope) {
   yield { type: "envelope" as const, envelope };
   yield { type: "complete" as const };
@@ -57,6 +98,7 @@ export interface OpenAICompatibleOptions {
   baseUrl: string;
   model: string;
   organization?: string;
+  thinking?: "enabled" | "disabled";
 }
 
 export class OpenAICompatibleProvider implements ModelProvider {
@@ -91,10 +133,13 @@ export class OpenAICompatibleProvider implements ModelProvider {
           body: JSON.stringify({
             model: this.options.model,
             temperature: 0.2,
+            ...(this.options.thinking
+              ? { thinking: { type: this.options.thinking } }
+              : {}),
             messages: [
               {
                 role: "system",
-                content: `${rendererSystemPrompt}\nJSON Schema:\n${JSON.stringify(renderEnvelopeJsonSchema())}`,
+                content: `${rendererSystemPrompt}${request.system ? `\n${request.system}` : ""}\nJSON Schema:\n${JSON.stringify(renderEnvelopeJsonSchema())}`,
               },
               ...(request.history ?? []),
               { role: "user", content: request.prompt },
@@ -124,7 +169,7 @@ export class OpenAICompatibleProvider implements ModelProvider {
         502,
       );
     try {
-      return singleEnvelope(parseJsonEnvelope(JSON.parse(content) as unknown));
+      return singleEnvelope(parseJsonEnvelope(extractJsonObject(content)));
     } catch (cause) {
       if (cause instanceof ProviderError) throw cause;
       throw new ProviderError(
@@ -166,7 +211,7 @@ export class AnthropicProvider implements ModelProvider {
           model: this.model,
           max_tokens: 8_000,
           temperature: 0.2,
-          system: `${rendererSystemPrompt}\nJSON Schema:\n${JSON.stringify(renderEnvelopeJsonSchema())}`,
+          system: `${rendererSystemPrompt}${request.system ? `\n${request.system}` : ""}\nJSON Schema:\n${JSON.stringify(renderEnvelopeJsonSchema())}`,
           messages: [
             ...(request.history ?? []),
             { role: "user", content: request.prompt },

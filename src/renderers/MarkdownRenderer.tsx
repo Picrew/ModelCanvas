@@ -60,7 +60,7 @@ function MermaidFence({ code }: { code: string }) {
           document.documentElement.dataset.theme === "dark"
             ? "dark"
             : "neutral",
-        flowchart: { htmlLabels: false },
+        htmlLabels: false,
       });
       try {
         const rendered = await mermaid.render(`markdown-mermaid-${id}`, code);

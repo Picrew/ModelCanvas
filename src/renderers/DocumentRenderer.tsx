@@ -18,6 +18,7 @@ import {
   Sheet,
 } from "lucide-react";
 import type { RendererComponentProps } from "@/src/core";
+import { withBasePath } from "@/src/core/base-path";
 import type { JsonPrimitive, KnownRenderEnvelope } from "@/src/schema";
 
 type DocumentEnvelope = Extract<
@@ -62,7 +63,7 @@ function PdfView({
     let loadingTask: import("pdfjs-dist").PDFDocumentLoadingTask | undefined;
     void import("pdfjs-dist").then(async (pdfjs) => {
       pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-        "/pdf.worker.min.mjs",
+        withBasePath("/pdf.worker.min.mjs"),
         window.location.origin,
       ).toString();
       loadingTask = pdfjs.getDocument({ url, enableXfa: false });
@@ -574,7 +575,7 @@ function PresentationView({
       );
       const body = new FormData();
       body.append("file", file);
-      const response = await fetch("/api/convert-office", {
+      const response = await fetch(withBasePath("/api/convert-office"), {
         method: "POST",
         body,
       });

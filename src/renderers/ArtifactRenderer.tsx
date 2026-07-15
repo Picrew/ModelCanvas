@@ -15,6 +15,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import type { RendererComponentProps } from "@/src/core";
+import { withBasePath } from "@/src/core/base-path";
 import type { KnownRenderEnvelope } from "@/src/schema";
 import { buildArtifactSrcDoc } from "@/src/security";
 
@@ -70,6 +71,7 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
     [],
   );
   const [ready, setReady] = useState(false);
+  const readyRef = useRef(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const srcDoc = useMemo(
@@ -82,6 +84,7 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
   );
   useEffect(() => {
     if (!running) return;
+    readyRef.current = false;
     setReady(false);
     const listener = (event: MessageEvent) => {
       if (
@@ -91,6 +94,7 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
       )
         return;
       if (event.data.level === "ready") {
+        readyRef.current = true;
         setReady(true);
         return;
       }
@@ -106,7 +110,7 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
     };
     window.addEventListener("message", listener);
     const timeout = window.setTimeout(() => {
-      if (!ready)
+      if (!readyRef.current)
         setLogs((current) => [
           ...current,
           {
@@ -119,7 +123,7 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
       window.removeEventListener("message", listener);
       window.clearTimeout(timeout);
     };
-  }, [envelope.payload.timeoutMs, key, ready, running]);
+  }, [envelope.payload.timeoutMs, key, running]);
   return (
     <section className="artifact-renderer" data-testid="html-artifact">
       <div className="artifact-security">
@@ -184,6 +188,10 @@ function HtmlArtifact({ envelope }: { envelope: HtmlEnvelope }) {
             sandbox="allow-scripts"
             srcDoc={srcDoc}
             referrerPolicy="no-referrer"
+            onLoad={() => {
+              readyRef.current = true;
+              setReady(true);
+            }}
           />
         ) : (
           <div className="artifact-stopped">
@@ -235,7 +243,7 @@ function ReactArtifact({ envelope }: { envelope: ReactEnvelope }) {
   );
   useEffect(() => {
     let active = true;
-    void fetch("/react-artifact-runtime.js")
+    void fetch(withBasePath("/react-artifact-runtime.js"))
       .then((response) => {
         if (!response.ok)
           throw new Error(`Runtime request failed (${response.status})`);
@@ -441,6 +449,7 @@ interface PythonOutput {
 
 function PythonArtifact({ envelope }: { envelope: PythonEnvelope }) {
   const [code, setCode] = useState(envelope.payload.code);
+  const [hydrated, setHydrated] = useState(false);
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("Ready in isolated Worker");
   const [outputs, setOutputs] = useState<PythonOutput[]>([]);
@@ -448,9 +457,13 @@ function PythonArtifact({ envelope }: { envelope: PythonEnvelope }) {
   const workerRef = useRef<Worker | null>(null);
   const canLoadPackages =
     envelope.security?.allowNetwork === true &&
-    envelope.security.allowedOrigins.some(
-      (origin) => origin.includes("jsdelivr") || origin.includes("pyodide"),
-    );
+    envelope.security.allowedOrigins.some((origin) => {
+      try {
+        return new URL(origin).origin === "https://cdn.jsdelivr.net";
+      } catch {
+        return false;
+      }
+    });
   const stop = () => {
     workerRef.current?.terminate();
     workerRef.current = null;
@@ -505,9 +518,13 @@ function PythonArtifact({ envelope }: { envelope: PythonEnvelope }) {
       code,
       packages: envelope.payload.packages,
       allowPackages: canLoadPackages,
+      allowedOrigins: envelope.security?.allowedOrigins ?? [],
     });
   };
-  useEffect(() => () => workerRef.current?.terminate(), [workerKey]);
+  useEffect(() => {
+    setHydrated(true);
+    return () => workerRef.current?.terminate();
+  }, [workerKey]);
   const fixture = envelope.payload.fixtureOutput;
   return (
     <section
@@ -527,7 +544,7 @@ function PythonArtifact({ envelope }: { envelope: PythonEnvelope }) {
           className="button primary compact"
           type="button"
           onClick={run}
-          disabled={status === "loading" || status === "running"}
+          disabled={!hydrated || status === "loading" || status === "running"}
         >
           <Play /> Run
         </button>

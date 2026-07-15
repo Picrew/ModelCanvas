@@ -14,6 +14,7 @@ import { defaultScenario } from "@/src/fixtures";
 import { deserializeRenderEnvelope } from "@/src/core";
 import type { AnyRenderEnvelope } from "@/src/schema";
 import { InspectorPanel } from "./InspectorPanel";
+import { LanguageToggle, useLanguage } from "./i18n";
 import { RendererHost, type RendererInspection } from "./RendererHost";
 
 const dangerousPreset = JSON.stringify(
@@ -50,6 +51,7 @@ const invalidPreset = JSON.stringify(
 );
 
 export function ProtocolInspector() {
+  const { tr } = useLanguage();
   const [raw, setRaw] = useState(
     JSON.stringify(defaultScenario.envelope, null, 2),
   );
@@ -62,35 +64,42 @@ export function ProtocolInspector() {
     <main className="docs-shell inspector-page">
       <header className="docs-topbar">
         <Link href="/" className="button secondary">
-          <ArrowLeft /> Playground
+          <ArrowLeft /> {tr("Playground", "工作台")}
         </Link>
         <div className="brand-link">
           <span className="logo-mark">
             <Blocks />
           </span>
           <span>
-            <strong>Protocol Inspector</strong>
-            <small>Validate · resolve · trace</small>
+            <strong>{tr("Protocol Inspector", "协议检查器")}</strong>
+            <small>
+              {tr("Validate · resolve · trace", "验证 · 解析 · 追踪")}
+            </small>
           </span>
         </div>
-        <Link href="/gallery" className="button secondary">
-          <Braces /> Gallery
-        </Link>
+        <div className="docs-actions">
+          <LanguageToggle />
+          <Link href="/gallery" className="button secondary">
+            <Braces /> {tr("Gallery", "组件库")}
+          </Link>
+        </div>
       </header>
       <section className="docs-hero compact">
-        <p className="eyebrow">Protocol workbench</p>
-        <h1>Inspect a RenderEnvelope</h1>
+        <p className="eyebrow">{tr("Protocol workbench", "协议工作台")}</p>
+        <h1>{tr("Inspect a RenderEnvelope", "检查 RenderEnvelope")}</h1>
         <p>
-          Edit the input and follow validation, renderer selection, and fallback
-          behavior before anything is rendered.
+          {tr(
+            "Edit the input and follow validation, renderer selection, and fallback behavior before anything is rendered.",
+            "编辑输入内容，并在渲染前查看验证、渲染器选择和备用处理过程。",
+          )}
         </p>
       </section>
       <div className="inspector-workbench">
         <section className="envelope-editor">
           <header>
             <div>
-              <p className="eyebrow">Input</p>
-              <h2>Raw envelope</h2>
+              <p className="eyebrow">{tr("Input", "输入")}</p>
+              <h2>{tr("Raw envelope", "原始数据")}</h2>
             </div>
             <div>
               <button
@@ -99,13 +108,13 @@ export function ProtocolInspector() {
                   setRaw(JSON.stringify(defaultScenario.envelope, null, 2))
                 }
               >
-                <WandSparkles /> Valid
+                <WandSparkles /> {tr("Valid", "有效")}
               </button>
               <button type="button" onClick={() => setRaw(invalidPreset)}>
-                <ShieldAlert /> Invalid
+                <ShieldAlert /> {tr("Invalid", "无效")}
               </button>
               <button type="button" onClick={() => setRaw(dangerousPreset)}>
-                <ShieldCheck /> Sandbox
+                <ShieldCheck /> {tr("Sandbox", "沙箱")}
               </button>
             </div>
           </header>
@@ -113,7 +122,10 @@ export function ProtocolInspector() {
             value={raw}
             onChange={(event) => setRaw(event.target.value)}
             spellCheck={false}
-            aria-label="Raw RenderEnvelope JSON"
+            aria-label={tr(
+              "Raw RenderEnvelope JSON",
+              "原始 RenderEnvelope JSON",
+            )}
           />
         </section>
         <section className="inspector-output">
@@ -126,9 +138,14 @@ export function ProtocolInspector() {
             ) : (
               <div className="renderer-state" role="alert">
                 <ShieldAlert />
-                <p className="eyebrow">Render blocked</p>
-                <h2>Fix validation issues first</h2>
-                <p>Invalid model output never reaches a renderer module.</p>
+                <p className="eyebrow">{tr("Render blocked", "渲染已阻止")}</p>
+                <h2>{tr("Fix validation issues first", "请先修复验证问题")}</h2>
+                <p>
+                  {tr(
+                    "Invalid model output never reaches a renderer module.",
+                    "无效的模型输出不会进入任何渲染器模块。",
+                  )}
+                </p>
               </div>
             )}
           </div>
