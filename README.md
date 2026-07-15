@@ -13,6 +13,16 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
 ### All 50 RenderEnvelope types
 
 <details open>
+<summary><strong>Controlled business widgets</strong></summary>
+<table>
+  <tr><td width="50%"><img src="docs/images/cases/widget.weather.png" alt="Weather widget"><br><code>widget.weather</code></td><td width="50%"><img src="docs/images/cases/widget.stock.png" alt="Stock widget"><br><code>widget.stock</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.sports.png" alt="Sports widget"><br><code>widget.sports</code></td><td><img src="docs/images/cases/widget.travel.png" alt="Travel widget"><br><code>widget.travel</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.product.png" alt="Product widget"><br><code>widget.product</code></td><td><img src="docs/images/cases/widget.calendar.png" alt="Calendar widget"><br><code>widget.calendar</code></td></tr>
+  <tr><td><img src="docs/images/cases/widget.email.png" alt="Email widget"><br><code>widget.email</code></td><td><img src="docs/images/cases/widget.logistics.png" alt="Logistics widget"><br><code>widget.logistics</code></td></tr>
+</table>
+</details>
+
+<details open>
 <summary><strong>Text, structured data, charts and diagrams</strong></summary>
 <table>
   <tr><td width="50%"><img src="docs/images/cases/text.markdown.png" alt="Markdown renderer"><br><code>text.markdown</code></td><td width="50%"><img src="docs/images/cases/text.code.png" alt="Code renderer"><br><code>text.code</code></td></tr>
@@ -20,28 +30,6 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
   <tr><td><img src="docs/images/cases/data.json.png" alt="JSON renderer"><br><code>data.json</code></td><td><img src="docs/images/cases/chart.echarts.png" alt="ECharts renderer"><br><code>chart.echarts</code></td></tr>
   <tr><td><img src="docs/images/cases/chart.vega-lite.png" alt="Vega-Lite renderer"><br><code>chart.vega-lite</code></td><td><img src="docs/images/cases/diagram.mermaid.png" alt="Mermaid renderer"><br><code>diagram.mermaid</code></td></tr>
   <tr><td><img src="docs/images/cases/diagram.excalidraw.png" alt="Excalidraw renderer"><br><code>diagram.excalidraw</code></td><td></td></tr>
-</table>
-</details>
-
-<details open>
-<summary><strong>Professional technical rendering · Math, Maps, Science and Engineering</strong></summary>
-
-| Family      | Representative types                              | Why these were selected                                                                |
-| ----------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Math        | plot, geometry, matrix, distribution, number-line | Covers coordinates, constraints, linear algebra, probability and elementary reasoning. |
-| Maps        | places, route, heatmap, track                     | Reuses one geographic interaction model for the most common location and path tasks.   |
-| Science     | molecule, reaction, optics                        | Represents structure, transformation and ray-based scientific explanation.             |
-| Engineering | circuit, waveform, timing, logic                  | Covers physical connectivity, sampled signals and digital-system behavior.             |
-
-<table>
-  <tr><td width="50%"><img src="docs/images/cases/math.plot.png" alt="Mathematical plot renderer"><br><code>math.plot</code></td><td width="50%"><img src="docs/images/cases/math.geometry.png" alt="Geometry renderer"><br><code>math.geometry</code></td></tr>
-  <tr><td><img src="docs/images/cases/math.matrix.png" alt="Matrix renderer"><br><code>math.matrix</code></td><td><img src="docs/images/cases/math.distribution.png" alt="Probability distribution renderer"><br><code>math.distribution</code></td></tr>
-  <tr><td><img src="docs/images/cases/math.number-line.png" alt="Number line renderer"><br><code>math.number-line</code></td><td><img src="docs/images/cases/map.places.png" alt="Places map renderer"><br><code>map.places</code></td></tr>
-  <tr><td><img src="docs/images/cases/map.route.png" alt="Route map renderer"><br><code>map.route</code></td><td><img src="docs/images/cases/map.heatmap.png" alt="Spatial heatmap renderer"><br><code>map.heatmap</code></td></tr>
-  <tr><td><img src="docs/images/cases/map.track.png" alt="Activity track renderer"><br><code>map.track</code></td><td><img src="docs/images/cases/science.molecule.png" alt="Molecule renderer"><br><code>science.molecule</code></td></tr>
-  <tr><td><img src="docs/images/cases/science.reaction.png" alt="Chemical reaction renderer"><br><code>science.reaction</code></td><td><img src="docs/images/cases/science.optics.png" alt="Optics ray renderer"><br><code>science.optics</code></td></tr>
-  <tr><td><img src="docs/images/cases/engineering.circuit.png" alt="Circuit schematic renderer"><br><code>engineering.circuit</code></td><td><img src="docs/images/cases/engineering.waveform.png" alt="Engineering waveform renderer"><br><code>engineering.waveform</code></td></tr>
-  <tr><td><img src="docs/images/cases/engineering.timing.png" alt="Digital timing renderer"><br><code>engineering.timing</code></td><td><img src="docs/images/cases/engineering.logic.png" alt="Logic circuit renderer"><br><code>engineering.logic</code></td></tr>
 </table>
 </details>
 
@@ -66,13 +54,25 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
 </table>
 </details>
 
-<details>
-<summary><strong>Controlled business widgets</strong></summary>
+<details open>
+<summary><strong>Professional technical rendering · Math, Maps, Science and Engineering</strong></summary>
+
+| Family      | Representative types                              | Why these were selected                                                                |
+| ----------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Math        | plot, geometry, matrix, distribution, number-line | Covers coordinates, constraints, linear algebra, probability and elementary reasoning. |
+| Maps        | places, route, heatmap, track                     | Reuses one geographic interaction model for the most common location and path tasks.   |
+| Science     | molecule, reaction, optics                        | Represents structure, transformation and ray-based scientific explanation.             |
+| Engineering | circuit, waveform, timing, logic                  | Covers physical connectivity, sampled signals and digital-system behavior.             |
+
 <table>
-  <tr><td width="50%"><img src="docs/images/cases/widget.weather.png" alt="Weather widget"><br><code>widget.weather</code></td><td width="50%"><img src="docs/images/cases/widget.stock.png" alt="Stock widget"><br><code>widget.stock</code></td></tr>
-  <tr><td><img src="docs/images/cases/widget.sports.png" alt="Sports widget"><br><code>widget.sports</code></td><td><img src="docs/images/cases/widget.travel.png" alt="Travel widget"><br><code>widget.travel</code></td></tr>
-  <tr><td><img src="docs/images/cases/widget.product.png" alt="Product widget"><br><code>widget.product</code></td><td><img src="docs/images/cases/widget.calendar.png" alt="Calendar widget"><br><code>widget.calendar</code></td></tr>
-  <tr><td><img src="docs/images/cases/widget.email.png" alt="Email widget"><br><code>widget.email</code></td><td><img src="docs/images/cases/widget.logistics.png" alt="Logistics widget"><br><code>widget.logistics</code></td></tr>
+  <tr><td width="50%"><img src="docs/images/cases/math.plot.png" alt="Mathematical plot renderer"><br><code>math.plot</code></td><td width="50%"><img src="docs/images/cases/math.geometry.png" alt="Geometry renderer"><br><code>math.geometry</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.matrix.png" alt="Matrix renderer"><br><code>math.matrix</code></td><td><img src="docs/images/cases/math.distribution.png" alt="Probability distribution renderer"><br><code>math.distribution</code></td></tr>
+  <tr><td><img src="docs/images/cases/math.number-line.png" alt="Number line renderer"><br><code>math.number-line</code></td><td><img src="docs/images/cases/map.places.png" alt="Places map renderer"><br><code>map.places</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.route.png" alt="Route map renderer"><br><code>map.route</code></td><td><img src="docs/images/cases/map.heatmap.png" alt="Spatial heatmap renderer"><br><code>map.heatmap</code></td></tr>
+  <tr><td><img src="docs/images/cases/map.track.png" alt="Activity track renderer"><br><code>map.track</code></td><td><img src="docs/images/cases/science.molecule.png" alt="Molecule renderer"><br><code>science.molecule</code></td></tr>
+  <tr><td><img src="docs/images/cases/science.reaction.png" alt="Chemical reaction renderer"><br><code>science.reaction</code></td><td><img src="docs/images/cases/science.optics.png" alt="Optics ray renderer"><br><code>science.optics</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.circuit.png" alt="Circuit schematic renderer"><br><code>engineering.circuit</code></td><td><img src="docs/images/cases/engineering.waveform.png" alt="Engineering waveform renderer"><br><code>engineering.waveform</code></td></tr>
+  <tr><td><img src="docs/images/cases/engineering.timing.png" alt="Digital timing renderer"><br><code>engineering.timing</code></td><td><img src="docs/images/cases/engineering.logic.png" alt="Logic circuit renderer"><br><code>engineering.logic</code></td></tr>
 </table>
 </details>
 
