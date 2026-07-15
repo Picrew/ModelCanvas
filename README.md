@@ -54,7 +54,7 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
 </table>
 </details>
 
-<details open>
+<details>
 <summary><strong>Professional technical rendering · Math, Maps, Science and Engineering</strong></summary>
 
 | Family      | Representative types                              | Why these were selected                                                                |

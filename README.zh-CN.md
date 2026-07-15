@@ -54,7 +54,7 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 </table>
 </details>
 
-<details open>
+<details>
 <summary><strong>专业技术渲染 · Math、Maps、Science 与 Engineering</strong></summary>
 
 | 子领域      | 首批代表类型                                      | 选择原因                                       |
