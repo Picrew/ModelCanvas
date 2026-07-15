@@ -105,6 +105,142 @@ function project(
   };
 }
 
+type ProjectedPoint = ReturnType<typeof project>;
+type PlotInterpolation =
+  MathPlotEnvelope["payload"]["series"][number]["interpolation"];
+
+function formatCoordinate(value: number) {
+  return value.toFixed(2);
+}
+
+function linearPlotPath(points: ProjectedPoint[]) {
+  return points
+    .map(
+      (point, index) =>
+        `${index ? "L" : "M"}${formatCoordinate(point.x)},${formatCoordinate(point.y)}`,
+    )
+    .join(" ");
+}
+
+function stepPlotPath(points: ProjectedPoint[]) {
+  if (!points.length) return "";
+  const commands = [
+    `M${formatCoordinate(points[0].x)},${formatCoordinate(points[0].y)}`,
+  ];
+  for (let index = 1; index < points.length; index += 1) {
+    commands.push(
+      `H${formatCoordinate(points[index].x)}`,
+      `V${formatCoordinate(points[index].y)}`,
+    );
+  }
+  return commands.join(" ");
+}
+
+function limitedEndpointSlope(
+  slope: number,
+  segmentSlope: number,
+  adjacentSlope: number,
+) {
+  if (Math.sign(slope) !== Math.sign(segmentSlope)) return 0;
+  if (
+    Math.sign(segmentSlope) !== Math.sign(adjacentSlope) &&
+    Math.abs(slope) > Math.abs(3 * segmentSlope)
+  ) {
+    return 3 * segmentSlope;
+  }
+  return slope;
+}
+
+/**
+ * Builds a shape-preserving cubic Hermite spline. Unlike a generic Bézier
+ * smoothing pass, it does not overshoot local extrema in sparsely sampled
+ * functions such as sin(x) and cos(x).
+ */
+function smoothPlotPath(points: ProjectedPoint[]) {
+  if (points.length < 3) return linearPlotPath(points);
+
+  const widths = points
+    .slice(1)
+    .map((point, index) => point.x - points[index].x);
+  if (widths.some((width) => width <= 0)) return linearPlotPath(points);
+
+  const segmentSlopes = widths.map(
+    (width, index) => (points[index + 1].y - points[index].y) / width,
+  );
+  const tangents = new Array<number>(points.length).fill(0);
+
+  const firstSlope =
+    ((2 * widths[0] + widths[1]) * segmentSlopes[0] -
+      widths[0] * segmentSlopes[1]) /
+    (widths[0] + widths[1]);
+  tangents[0] = limitedEndpointSlope(
+    firstSlope,
+    segmentSlopes[0],
+    segmentSlopes[1],
+  );
+
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const previousSlope = segmentSlopes[index - 1];
+    const nextSlope = segmentSlopes[index];
+    if (
+      previousSlope === 0 ||
+      nextSlope === 0 ||
+      Math.sign(previousSlope) !== Math.sign(nextSlope)
+    ) {
+      tangents[index] = 0;
+      continue;
+    }
+    const previousWidth = widths[index - 1];
+    const nextWidth = widths[index];
+    const previousWeight = 2 * nextWidth + previousWidth;
+    const nextWeight = nextWidth + 2 * previousWidth;
+    tangents[index] =
+      (previousWeight + nextWeight) /
+      (previousWeight / previousSlope + nextWeight / nextSlope);
+  }
+
+  const lastIndex = points.length - 1;
+  const lastWidthIndex = widths.length - 1;
+  const lastSlope =
+    ((2 * widths[lastWidthIndex] + widths[lastWidthIndex - 1]) *
+      segmentSlopes[lastWidthIndex] -
+      widths[lastWidthIndex] * segmentSlopes[lastWidthIndex - 1]) /
+    (widths[lastWidthIndex] + widths[lastWidthIndex - 1]);
+  tangents[lastIndex] = limitedEndpointSlope(
+    lastSlope,
+    segmentSlopes[lastWidthIndex],
+    segmentSlopes[lastWidthIndex - 1],
+  );
+
+  const commands = [
+    `M${formatCoordinate(points[0].x)},${formatCoordinate(points[0].y)}`,
+  ];
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const width = widths[index];
+    const start = points[index];
+    const end = points[index + 1];
+    commands.push(
+      `C${formatCoordinate(start.x + width / 3)},${formatCoordinate(
+        start.y + (tangents[index] * width) / 3,
+      )} ${formatCoordinate(end.x - width / 3)},${formatCoordinate(
+        end.y - (tangents[index + 1] * width) / 3,
+      )} ${formatCoordinate(end.x)},${formatCoordinate(end.y)}`,
+    );
+  }
+  return commands.join(" ");
+}
+
+function plotPath(points: ProjectedPoint[], interpolation: PlotInterpolation) {
+  switch (interpolation) {
+    case "linear":
+      return linearPlotPath(points);
+    case "step":
+      return stepPlotPath(points);
+    case "smooth":
+      return smoothPlotPath(points);
+  }
+}
+
 function ticks([start, end]: readonly [number, number], count: number) {
   return Array.from({ length: count }, (_, index) => {
     const value = Number(
@@ -336,17 +472,12 @@ function MathPlot({ envelope }: { envelope: MathPlotEnvelope }) {
           >
             <PlotAxes {...data} showGrid={showGrid && data.showGrid} />
             {data.series.map((series, index) => {
-              const path = series.points
-                .map((point, pointIndex) => {
-                  const mapped = project(
-                    point.x,
-                    point.y,
-                    data.xDomain,
-                    data.yDomain,
-                  );
-                  return `${pointIndex ? "L" : "M"}${mapped.x.toFixed(2)},${mapped.y.toFixed(2)}`;
-                })
-                .join(" ");
+              const path = plotPath(
+                series.points.map((point) =>
+                  project(point.x, point.y, data.xDomain, data.yDomain),
+                ),
+                series.interpolation,
+              );
               return (
                 <path
                   key={series.id}

@@ -204,6 +204,9 @@ const MathPlotPayloadSchema = z
             id: z.string().min(1).max(120),
             label: z.string().min(1).max(160),
             color: z.string().max(40).optional(),
+            interpolation: z
+              .enum(["smooth", "linear", "step"])
+              .default("smooth"),
             points: z.array(Point2dSchema).min(2).max(5_000),
           })
           .strict(),

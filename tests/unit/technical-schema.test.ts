@@ -43,4 +43,38 @@ describe("technical render envelopes", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("defaults mathematical plots to smooth interpolation", () => {
+    const parsed = parseRenderEnvelope({
+      id: "sparse-trigonometric-plot",
+      type: "math.plot",
+      version: "1.0.0",
+      payload: {
+        xDomain: [-Math.PI, Math.PI],
+        yDomain: [-1.5, 1.5],
+        series: [
+          {
+            id: "sin",
+            label: "sin(x)",
+            points: [
+              { x: -Math.PI, y: 0 },
+              { x: -Math.PI / 2, y: -1 },
+              { x: 0, y: 0 },
+              { x: Math.PI / 2, y: 1 },
+              { x: Math.PI, y: 0 },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(parsed.success).toBe(true);
+    if (
+      !parsed.success ||
+      parsed.unknownType ||
+      parsed.data.type !== "math.plot"
+    )
+      throw new Error("Expected a valid math.plot envelope");
+    expect(parsed.data.payload.series[0].interpolation).toBe("smooth");
+  });
 });

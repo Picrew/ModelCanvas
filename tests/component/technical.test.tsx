@@ -34,4 +34,41 @@ describe("technical renderer", () => {
     expect(grid).toHaveAttribute("aria-pressed", "false");
     expect(labels).toHaveAttribute("aria-pressed", "false");
   });
+
+  it("smooths mathematical series by default while preserving linear mode", () => {
+    const smoothEnvelope = structuredClone(envelope("math-plot"));
+    if (smoothEnvelope.type !== "math.plot")
+      throw new Error("Expected math.plot fixture");
+    for (const series of smoothEnvelope.payload.series) {
+      series.points = series.points.filter((_, index) => index % 10 === 0);
+    }
+    const smoothResult = render(
+      <TechnicalRenderer envelope={smoothEnvelope} />,
+    );
+    const smoothPaths = smoothResult.container.querySelectorAll(
+      ".technical-series-line",
+    );
+    expect(smoothPaths).toHaveLength(2);
+    for (const path of smoothPaths) {
+      expect(path.getAttribute("d")).toContain("C");
+    }
+    smoothResult.unmount();
+
+    const linearEnvelope = structuredClone(envelope("math-plot"));
+    if (linearEnvelope.type !== "math.plot")
+      throw new Error("Expected math.plot fixture");
+    for (const series of linearEnvelope.payload.series) {
+      series.interpolation = "linear";
+    }
+    const linearResult = render(
+      <TechnicalRenderer envelope={linearEnvelope} />,
+    );
+    const linearPaths = linearResult.container.querySelectorAll(
+      ".technical-series-line",
+    );
+    for (const path of linearPaths) {
+      expect(path.getAttribute("d")).not.toContain("C");
+      expect(path.getAttribute("d")).toContain("L");
+    }
+  });
 });
