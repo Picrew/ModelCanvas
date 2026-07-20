@@ -2,6 +2,7 @@ import { parseRenderEnvelope } from "@/src/core";
 import { withBasePath } from "@/src/core/base-path";
 import type { KnownRenderEnvelope, RenderEnvelopeInput } from "@/src/schema";
 import { technicalScenarios } from "./technical";
+import { tetrisGameEnvelope } from "./games";
 
 export interface DemoScenario {
   id: string;
@@ -13,6 +14,7 @@ export interface DemoScenario {
     | "Media"
     | "Documents"
     | "Artifacts"
+    | "Games"
     | "Technical"
     | "Data & spatial";
   prompt: string;
@@ -1249,6 +1251,14 @@ const rawScenarios = [
     "Artifacts",
     "Analyze data with pandas and Matplotlib",
     pythonEnvelope,
+  ],
+  [
+    "tetris",
+    "Neon Blocks",
+    "A real-time Canvas game with keyboard, touch, restart and runtime events.",
+    "Games",
+    "Create a playable Tetris game",
+    tetrisGameEnvelope,
   ],
   [
     "map",

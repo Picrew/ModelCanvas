@@ -10,7 +10,7 @@ ModelCanvas is a protocol-driven rendering bridge for rich model output. A model
 
 These are screenshots from the running ModelCanvas frontend—not design mockups. Every case is backed by a validated fixture, and sample data is visibly labeled. Run the app and append `&case=1` to any scenario URL for the focused, ChatGPT-style result view.
 
-### All 50 RenderEnvelope types
+### All 51 RenderEnvelope types
 
 <details open>
 <summary><strong>Controlled business widgets</strong></summary>
@@ -51,6 +51,7 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
   <tr><td><img src="docs/images/cases/map.geo.png" alt="GeoJSON map renderer"><br><code>map.geo</code></td><td><img src="docs/images/cases/model.3d.png" alt="3D model renderer"><br><code>model.3d</code></td></tr>
   <tr><td><img src="docs/images/cases/artifact.html.png" alt="HTML artifact renderer"><br><code>artifact.html</code></td><td><img src="docs/images/cases/artifact.react.png" alt="React artifact renderer"><br><code>artifact.react</code></td></tr>
   <tr><td><img src="docs/images/cases/artifact.python.png" alt="Python artifact renderer"><br><code>artifact.python</code></td><td><img src="docs/images/cases/form.dynamic.png" alt="Dynamic form renderer"><br><code>form.dynamic</code></td></tr>
+  <tr><td><img src="docs/images/cases/game.canvas.png" alt="Playable Canvas game renderer"><br><code>game.canvas</code></td><td></td></tr>
 </table>
 </details>
 
@@ -79,10 +80,11 @@ These are screenshots from the running ModelCanvas frontend—not design mockups
 ## What is included
 
 - Three output paths: controlled widgets, declarative renderer catalog, and sandboxed open artifacts.
-- 50 exact Zod envelope variants and a registry with version, MIME, extension, priority, override, lazy-load, and fallback support.
-- 55 deterministic offline scenarios covering all 50 protocol variants across text, charts, diagrams, data, media, documents, professional technical graphics, maps, 3D, forms, widgets, and code artifacts.
+- 51 exact Zod envelope variants and a registry with version, MIME, extension, priority, override, lazy-load, and fallback support.
+- 56 deterministic offline scenarios covering all 51 protocol variants across text, charts, diagrams, data, media, documents, professional technical graphics, maps, 3D, forms, widgets, code artifacts, and real-time Canvas games.
 - A unified Technical category for sampled math plots, geometry, matrices, probability, number lines, semantic maps, molecules, reactions, optics, circuit schematics, engineering waveforms, timing diagrams, and logic circuits.
 - A self-hosted React/TypeScript artifact runtime that compiles in an opaque, network-disabled iframe without a remote bundler.
+- A dedicated `game.canvas` runtime with keyboard/touch input, focus management, restart/fullscreen controls, event telemetry, and a playable Tetris fixture.
 - Playground, protocol inspector, and renderer gallery.
 - MCP Apps, AG-UI, A2UI, OpenAI Apps, and Vercel AI SDK adapters.
 - OpenAI-compatible and Anthropic provider interfaces with server-only credentials.

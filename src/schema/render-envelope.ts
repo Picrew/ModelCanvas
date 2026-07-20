@@ -52,6 +52,7 @@ export const RenderTypeSchema = z.enum([
   "artifact.html",
   "artifact.react",
   "artifact.python",
+  "game.canvas",
   "widget.weather",
   "widget.stock",
   "widget.sports",
@@ -1017,6 +1018,28 @@ const PythonArtifactPayloadSchema = z
   })
   .strict();
 
+const GameCanvasPayloadSchema = z
+  .object({
+    html: z.string().min(1).max(2_000_000),
+    width: z.number().int().min(240).max(1_920).default(960),
+    height: z.number().int().min(240).max(1_080).default(640),
+    controls: z
+      .array(
+        z
+          .object({
+            keys: z.array(z.string().min(1).max(40)).min(1).max(4),
+            action: z.string().min(1).max(80),
+          })
+          .strict(),
+      )
+      .max(16)
+      .default([]),
+    touch: z.boolean().default(true),
+    allowedOrigins: z.array(z.string().url()).max(20).default([]),
+    timeoutMs: z.number().int().min(500).max(30_000).default(5_000),
+  })
+  .strict();
+
 const HourlyWeatherSchema = z
   .object({
     time: z.string(),
@@ -1345,6 +1368,7 @@ export const RenderEnvelopeSchema = z.discriminatedUnion("type", [
   envelope("artifact.html", HtmlArtifactPayloadSchema),
   envelope("artifact.react", ReactArtifactPayloadSchema),
   envelope("artifact.python", PythonArtifactPayloadSchema),
+  envelope("game.canvas", GameCanvasPayloadSchema),
   envelope("widget.weather", WeatherPayloadSchema),
   envelope("widget.stock", StockPayloadSchema),
   envelope("widget.sports", SportsPayloadSchema),

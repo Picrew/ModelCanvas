@@ -368,6 +368,15 @@ const capabilities: Record<RenderType, CapabilityEntry> = {
     fullscreen: true,
     export: ["py", "output"],
   },
+  "game.canvas": {
+    displayName: "Canvas Game",
+    group: "Games",
+    mimeTypes: ["application/vnd.modelcanvas.game+html"],
+    extensions: ["game.html"],
+    editing: true,
+    fullscreen: true,
+    export: ["html"],
+  },
   "widget.weather": {
     displayName: "Weather Widget",
     group: "Widgets",
@@ -535,6 +544,7 @@ register(
 register("artifact.html", () => import("@/src/renderers/ArtifactRenderer"));
 register("artifact.react", () => import("@/src/renderers/ArtifactRenderer"));
 register("artifact.python", () => import("@/src/renderers/ArtifactRenderer"));
+register("game.canvas", () => import("@/src/renderers/GameCanvasRenderer"));
 register("widget.weather", () => import("@/src/renderers/WidgetRenderer"));
 register("widget.stock", () => import("@/src/renderers/WidgetRenderer"));
 register("widget.sports", () => import("@/src/renderers/WidgetRenderer"));

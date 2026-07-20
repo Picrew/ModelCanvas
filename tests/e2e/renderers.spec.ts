@@ -119,6 +119,35 @@ test("sandboxed HTML and React artifacts start, stop, reset and run", async ({
   await expect(reactFrame.getByText("13,600")).toBeVisible();
 });
 
+test("game.canvas runs a playable keyboard and touch game", async ({
+  page,
+}) => {
+  await openScenario(page, "tetris", "game-canvas");
+  const game = page.getByTestId("game-canvas");
+  const frame = page.frameLocator('iframe[title^="Canvas game preview"]');
+  const canvas = frame.getByLabel("Playable Tetris board");
+  const state = frame.locator("#game-state");
+  await expect(canvas).toBeVisible();
+  await expect(state).toHaveAttribute("data-running", "true");
+  const startX = await state.getAttribute("data-x");
+  await canvas.press("ArrowLeft");
+  await expect(state).not.toHaveAttribute("data-x", startX ?? "");
+  await frame.getByRole("button", { name: "Soft drop" }).click();
+  await expect(state).not.toHaveAttribute("data-y", "-1");
+  await frame
+    .getByRole("button", { name: "Pause", exact: true })
+    .first()
+    .click();
+  await expect(state).toHaveAttribute("data-running", "false");
+  await frame.getByRole("button", { name: "Restart" }).click();
+  await expect(state).toHaveAttribute("data-running", "true");
+  await expect(frame.locator("#score")).toHaveText("0");
+  await game.getByRole("button", { name: "Stop" }).click();
+  await expect(game.getByText("Game stopped")).toBeVisible();
+  await game.getByRole("button", { name: "Run" }).click();
+  await expect(canvas).toBeVisible();
+});
+
 test("Python artifact executes offline in a terminable Worker", async ({
   page,
 }) => {

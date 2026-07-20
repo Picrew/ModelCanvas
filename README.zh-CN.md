@@ -10,7 +10,7 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 
 以下截图全部来自正在运行的 ModelCanvas 前端，不是设计稿。每个案例都有通过 Schema 校验的 fixture，并会明确标注示例数据。运行应用后，在任意场景 URL 后添加 `&case=1`，即可打开聚焦的 ChatGPT 风格结果视图。
 
-### 全部 50 种 RenderEnvelope 类型
+### 全部 51 种 RenderEnvelope 类型
 
 <details open>
 <summary><strong>受控业务 Widget</strong></summary>
@@ -51,6 +51,7 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
   <tr><td><img src="docs/images/cases/map.geo.png" alt="GeoJSON 地图渲染器"><br><code>map.geo</code></td><td><img src="docs/images/cases/model.3d.png" alt="3D 模型渲染器"><br><code>model.3d</code></td></tr>
   <tr><td><img src="docs/images/cases/artifact.html.png" alt="HTML Artifact 渲染器"><br><code>artifact.html</code></td><td><img src="docs/images/cases/artifact.react.png" alt="React Artifact 渲染器"><br><code>artifact.react</code></td></tr>
   <tr><td><img src="docs/images/cases/artifact.python.png" alt="Python Artifact 渲染器"><br><code>artifact.python</code></td><td><img src="docs/images/cases/form.dynamic.png" alt="动态表单渲染器"><br><code>form.dynamic</code></td></tr>
+  <tr><td><img src="docs/images/cases/game.canvas.png" alt="可玩的 Canvas 游戏渲染器"><br><code>game.canvas</code></td><td></td></tr>
 </table>
 </details>
 
@@ -79,12 +80,13 @@ ModelCanvas 是一个面向大模型富内容输出的通用渲染协议、Rende
 ## 功能
 
 - 三条渲染路径：受控 Widget、声明式组件目录、开放式沙箱 Artifact。
-- 50 种严格 Zod discriminated union，提供 JSON Schema、版本迁移、字段路径错误和未知类型 fallback。
-- 55 个确定性离线场景，覆盖全部 50 种协议类型；无需商业 API Key。
+- 51 种严格 Zod discriminated union，提供 JSON Schema、版本迁移、字段路径错误和未知类型 fallback。
+- 56 个确定性离线场景，覆盖全部 51 种协议类型；无需商业 API Key。
 - 统一的 Technical 专业技术大类，覆盖数学函数、几何、矩阵、概率、数轴、语义地图、分子、反应、光路、电路、工程波形、数字时序与逻辑电路。
 - Markdown、代码、数学、JSON/YAML/XML/日志、表格、ECharts、Vega-Lite、Mermaid、Excalidraw。
 - 图片、波形音频、发音、视频、PDF、DOCX、XLSX、PPTX、EPUB、Notebook、Parquet/Arrow。
 - MapLibre 地图、Three.js 3D、HTML/React/Python Artifact、动态表单。
+- 独立的 `game.canvas` 实时游戏运行时，支持键盘、触控、焦点管理、重启、全屏和游戏事件，并内置可玩的俄罗斯方块示例。
 - Weather、Stock、Sports、Travel、Product、Calendar、Email、Logistics Widget。
 - MCP Apps、AG-UI、A2UI、OpenAI Apps 与 Vercel AI SDK Adapter。
 - Playground、Protocol Inspector、Component Gallery、深浅主题、移动端布局和可访问性测试。

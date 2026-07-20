@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { assertJsonWithinLimits } from "@/src/security/json";
 import { validateUrl } from "@/src/security/url";
-import { buildArtifactSrcDoc } from "@/src/security/artifact";
+import {
+  buildArtifactSrcDoc,
+  buildGameCanvasSrcDoc,
+} from "@/src/security/artifact";
 import { sanitizeDataOnlyChartOption } from "@/src/security/chart";
 import {
   isAllowedPythonRuntimeRequest,
@@ -49,6 +52,17 @@ describe("security boundaries", () => {
     expect(srcdoc).toContain("connect-src 'none'");
     expect(srcdoc).toContain("modelcanvas-artifact");
     expect(srcdoc).toContain("<script>console.log('running')</script>");
+  });
+
+  it("isolates game.canvas and exposes only the event bridge", () => {
+    const srcdoc = buildGameCanvasSrcDoc(
+      "<canvas></canvas><script>ModelCanvasGame.emit('start')</script>",
+      [],
+    );
+    expect(srcdoc).toContain("connect-src 'none'");
+    expect(srcdoc).toContain("modelcanvas-game");
+    expect(srcdoc).toContain("window.ModelCanvasGame");
+    expect(srcdoc).not.toContain("allow-same-origin");
   });
 
   it("removes functions and prototype keys from chart options", () => {

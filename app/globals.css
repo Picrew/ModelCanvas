@@ -3335,6 +3335,55 @@ code {
   color: #65718a;
   font-size: 8px;
 }
+.game-canvas-renderer {
+  min-height: 620px;
+}
+.game-control-guide {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 8px;
+  white-space: nowrap;
+}
+.game-control-guide > svg {
+  width: 15px;
+  color: var(--accent);
+}
+.game-control-guide span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.game-control-guide kbd {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--panel-strong);
+  color: var(--text);
+  font: inherit;
+}
+.game-canvas-stage {
+  overflow: hidden;
+  background: #070b16;
+}
+.game-canvas-stage iframe,
+.game-canvas-stage .artifact-code {
+  width: 100%;
+  max-width: 100%;
+}
+.game-canvas-stage:fullscreen iframe {
+  height: 100vh !important;
+}
+.game-canvas-renderer .console-panel header small {
+  color: #8995ad;
+}
 .local-react-stage {
   min-height: 330px;
   background: #0d1323;

@@ -7,7 +7,7 @@ import {
   type ModelStream,
 } from "./types";
 
-const rendererSystemPrompt = `You create exactly one ModelCanvas RenderEnvelope JSON object. The object must satisfy the supplied JSON Schema. Use version 1.0.0. Never include JavaScript functions. Prefer controlled render types. If asked for executable code, mark security.trusted=false, security.sandbox=true, and disable network unless explicitly essential. Return JSON only.`;
+const rendererSystemPrompt = `You create exactly one ModelCanvas RenderEnvelope JSON object. The object must satisfy the supplied JSON Schema. Use version 1.0.0. Never put JavaScript function values outside source-code strings. Prefer controlled render types. If asked for an interactive browser game, use game.canvas and provide a complete standalone HTML document fragment in payload.html with a responsive canvas, inline CSS and JavaScript, keyboard controls, pointer/touch controls, visible game state, and no external assets. Populate payload.controls with the actual controls. If asked for executable code, mark security.trusted=false, security.sandbox=true, and disable network unless explicitly essential. Return JSON only.`;
 
 function classifyResponse(status: number, provider: string): ProviderError {
   if (status === 401 || status === 403)

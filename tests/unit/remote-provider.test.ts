@@ -75,5 +75,8 @@ describe("OpenAICompatibleProvider response parsing", () => {
       thinking: { type: "disabled" },
       response_format: { type: "json_object" },
     });
+    expect(
+      (requestBody?.messages as Array<{ content: string }>)[0]?.content,
+    ).toContain("use game.canvas");
   });
 });

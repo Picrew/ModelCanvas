@@ -16,6 +16,7 @@ import {
   FileText,
   FileUp,
   GalleryHorizontalEnd,
+  Gamepad2,
   History,
   Image,
   Layers3,
@@ -86,6 +87,7 @@ const chineseCategoryLabels: Record<string, string> = {
   "Data & spatial": "数据与空间",
   Documents: "文档",
   Artifacts: "交互作品",
+  Games: "游戏",
   Technical: "专业技术",
 };
 
@@ -689,6 +691,8 @@ export function Playground() {
                           <Volume2 />
                         ) : item.category === "Artifacts" ? (
                           <Layers3 />
+                        ) : item.category === "Games" ? (
+                          <Gamepad2 />
                         ) : item.category === "Documents" ? (
                           <FileText />
                         ) : item.id === "compare" ? (

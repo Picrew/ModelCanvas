@@ -42,6 +42,7 @@ const cases = [
   ["artifact.html", "html"],
   ["artifact.react", "react"],
   ["artifact.python", "python"],
+  ["game.canvas", "tetris"],
   ["widget.weather", "weather"],
   ["widget.stock", "stock"],
   ["widget.sports", "sports"],
@@ -53,7 +54,7 @@ const cases = [
   ["form.dynamic", "form"],
 ] as const;
 
-test("all 50 focused cases render without renderer failures", async ({
+test("all 51 focused cases render without renderer failures", async ({
   page,
 }) => {
   test.slow();
